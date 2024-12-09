@@ -1,24 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useEffect, useState} from 'react';
 import './App.css';
+import Overview from "./components/overview/Overview";
+import Manage from "./components/manage/Manage";
+import {Person, Santa, SantaRun} from "./model";
+import {get} from "./Utils";
 
 function App() {
+  const [peopleList, setPeopleList] = useState<Person[]>([]);
+  const [page, setPage] = useState<string>('overview');
+
+  const [selectedSanta, setSelectedSanta] = useState<Santa>()
+  const [selectedRun, setSelectedRun] = useState<SantaRun>({peopleList: []})
+
+  function updateSelectedRun(selectedRun?: SantaRun) {
+    selectedRun ? setSelectedRun(JSON.parse(JSON.stringify(selectedRun))) : setSelectedRun({peopleList: []});
+  }
+
+  useEffect(() => {
+    refreshPeopleList(() => {});
+  }, []);
+
+  function refreshPeopleList(cbk: () => void) {
+    get("http://localhost:8080/people").then(res => {
+      setPeopleList(res);
+      cbk();
+    });
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {page === 'overview' ?
+        <Overview peopleList={peopleList} selectedSanta={selectedSanta} selectedRun={selectedRun}
+                  onSelectSanta={setSelectedSanta} onSelectRun={updateSelectedRun} onManage={() => setPage('manage')}></Overview>
+        : <Manage peopleList={peopleList} selectedSanta={selectedSanta} selectedRun={selectedRun} onBack={() => setPage('overview')} onUpdatedPeopleList={refreshPeopleList}></Manage>
+      }
     </div>
   );
 }

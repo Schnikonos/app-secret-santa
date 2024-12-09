@@ -1,0 +1,62 @@
+
+.people-item {
+  cursor: pointer;
+}
+
+[is-selected="true"] {
+  background-color: lightgray;
+}
+
+h3 {
+  padding-left: 32px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.email-fields > * {
+  width: 100%;
+}
+
+.dialog-content {
+  width: 80vw;
+  max-width: 600px;
+  & > * {
+    margin: 20px;
+  }
+}
+
+.name-fields {
+  display: flex;
+  & > * {
+    flex-grow: 1;
+  }
+
+  & > * + * {
+    margin-left: 16px !important;
+  }
+}
+
+.manage-content {
+  display: grid;
+  grid-template-columns: 300px auto;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+
+.block {
+  height: 100%;
+}
+
+.list {
+  height: calc(100vh - 130px);;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.block-title {
+  display: flex;
+  justify-content: space-between;
+}

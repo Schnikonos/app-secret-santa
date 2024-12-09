@@ -1,0 +1,22 @@
+.item {
+  display: flex;
+}
+
+.info {
+  flex-grow: 1;
+}
+
+.name {
+  font-weight: bold;
+}
+
+.email {
+  font-style: italic;
+}
+
+.fullname, .email {
+  width: 215px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

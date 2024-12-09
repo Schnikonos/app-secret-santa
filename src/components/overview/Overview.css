@@ -1,0 +1,7 @@
+
+.main-panel {
+  display: grid;
+  grid-template-columns: auto 250px;
+  height: calc(100vh - 64px);
+}
+

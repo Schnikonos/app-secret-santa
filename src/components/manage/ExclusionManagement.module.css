@@ -1,0 +1,92 @@
+.container {
+  display: grid;
+  grid-template-columns: auto 300px;
+  height: 100%;
+
+  --from-color: #fdffe4;
+  --both-color: #fff0f0;
+  --to-color: #fff3e5;
+}
+
+.peopleExclusions {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: 30% 30% 30%;
+
+  & > * {
+    margin: 8px;
+    border-radius: 16px;
+    border: dashed 5px lightgray;
+  }
+}
+
+.exclusionFrom {
+  background-color: var(--from-color);
+}
+
+.exclusionTo {
+  background-color: var(--to-color);
+}
+
+.exclusionBoth {
+  background-color: var(--both-color);
+}
+
+.draggable {
+  user-select: none;
+  background-color: white;
+  cursor: grab;
+}
+
+.draggable.selected {
+  filter: brightness(85%);
+}
+
+.name {
+  font-weight: bold;
+}
+
+.surname {
+
+}
+
+.willNotReceiveFrom {
+  background-color: var(--from-color);
+}
+
+.willNotGiveTo {
+  background-color: var(--to-color);
+}
+
+.noRelationTo {
+  background-color: var(--both-color);
+}
+
+.excludedItem {
+  padding: 0 16px;
+}
+
+.list {
+  height: calc(100% - 70px);
+  overflow-y: auto;
+}
+
+.block {
+
+}
+
+.blockTitle {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 16px;
+  border-bottom: 5px solid lightgray;
+}
+
+.blockContent {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 16px 32px;
+  height: calc(100% - 80px);
+  overflow-y: auto;
+}

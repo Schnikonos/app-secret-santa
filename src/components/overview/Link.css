@@ -1,0 +1,19 @@
+
+.base {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.link {
+  display: flex;
+}
+
+.from, .to {
+  min-width: 250px;
+}
+
+.link {
+  min-width: 20px;
+}
