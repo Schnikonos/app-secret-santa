@@ -100,18 +100,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
       }
     }
 
-    for (const people of peopleList) {
-      const noFromTo = people.willNotReceiveFrom.filter(p1 => people.willNotGiveTo.find(p2 => p2.id === p1.id) !== undefined);
-      for (const person of noFromTo) {
-        people.noRelationTo.push(person);
-        person.noRelationTo.push(people);
-        people.willNotReceiveFrom = people.willNotReceiveFrom.filter(p => p.id !== person.id);
-        people.willNotGiveTo = people.willNotGiveTo.filter(p => p.id !== person.id);
-        person.willNotReceiveFrom = person.willNotReceiveFrom.filter(p => p.id !== people.id);
-        person.willNotGiveTo = person.willNotGiveTo.filter(p => p.id !== people.id);
-      }
-    }
-
+    gatherData();
     setActivePeopleList(peopleList.filter(p => p.isSelected));
   }
 
@@ -138,7 +127,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
       }
       if (selectedRun.peopleList.find(p => p.idPeople === person.id) === undefined) {
         const exclusions: SantaRunExclusion[] = [...person.willNotGiveTo.map(p => ({idPeople: p.id})), ...person.noRelationTo.map(p => ({idPeople: p.id}))];
-        selectedRun.peopleList = [...selectedRun.peopleList, {idPeople: person.id, exclusions: [], mailSent: false}];
+        selectedRun.peopleList = [...selectedRun.peopleList, {idPeople: person.id, exclusions, mailSent: false}];
       }
     } else if (!isActive) {
       setActivePeopleList(activePeopleList.filter(p => p.id !== person.id))
@@ -156,6 +145,45 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     setOpenPersonDialog(true);
   }
 
+  function save() {
+    selectedRun.peopleList = [];
+    gatherData();
+
+    peopleList.forEach(p => {
+      if (p.isSelected) {
+        selectedRun.peopleList.push({
+          idPeople: p.id,
+          exclusions: Array.from(new Set([...p.willNotGiveTo.map(p1 => p1.id), ...p.noRelationTo.map(p1 => p1.id)])).map(p1 => ({idPeople: p1})),
+          mailSent: false
+        });
+      }
+    });
+    onBack();
+  }
+
+  function gatherData() {
+    // set relations on both side
+    peopleList.forEach(p => {
+      p.willNotGiveTo.forEach(p1 => !p1.willNotReceiveFrom.find(e => e.id === p.id) ? p1.willNotReceiveFrom.push(p) : null);
+      p.willNotReceiveFrom.forEach(p1 => !p1.willNotGiveTo.find(e => e.id === p.id) ? p1.willNotGiveTo.push(p) : null);
+      p.noRelationTo.forEach(p1 => !p1.noRelationTo.find(e => e.id === p.id) ? p1.noRelationTo.push(p) : null)
+    });
+
+    // if notGiveTo + notReceive from -> noRelationTo
+    peopleList.forEach(p => {
+      const both = p.willNotGiveTo.filter(p1 => p.willNotReceiveFrom.find(e => e.id === p1.id) || p.noRelationTo.find(e => e.id === p1.id));
+      both.forEach(p1 => !p.noRelationTo.find(e => e.id === p1.id) ? p.noRelationTo.push(p1) : null);
+      p.willNotGiveTo = p.willNotGiveTo.filter(p1 => !both.find(e => e.id === p1.id));
+      p.willNotReceiveFrom = p.willNotReceiveFrom.filter(p1 => !both.find(e => e.id === p1.id));
+    });
+
+    peopleList.forEach(p => {
+      p.willNotGiveTo.sort((a, b) => a.name.localeCompare(b.name));
+      p.willNotReceiveFrom.sort((a, b) => a.name.localeCompare(b.name));
+      p.noRelationTo.sort((a, b) => a.name.localeCompare(b.name));
+    });
+  }
+
   return (
     <div>
       <AppBar position="static">
@@ -164,7 +192,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
             Manage {selectedSanta?.name}
           </Typography>
-          <Button color="inherit">Save</Button>
+          <Button color="inherit" onClick={save}>Save</Button>
         </Toolbar>
       </AppBar>
       <div className="manage-content">

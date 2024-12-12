@@ -1,0 +1,29 @@
+
+.mainPanel {
+  display: grid;
+  grid-template-columns: auto 250px;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.subPanel {
+  height: calc(100vh - 64px);
+}
+
+.rightPanel {
+  height: calc(100vh - 64px);
+}
+
+.actionBar {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  & > * + * {
+    margin-left: 10px !important;
+  }
+}
+
+.listNames {
+  height: calc(100% - 53px);
+  overflow-y: auto;
+}

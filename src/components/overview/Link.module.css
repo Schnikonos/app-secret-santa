@@ -1,6 +1,7 @@
 
 .base {
-  display: flex;
+  display: grid;
+  grid-template-columns: 30% 5% 30% 5% 30%;
   width: 100%;
   justify-content: space-around;
   align-items: center;
@@ -8,6 +9,7 @@
 
 .link {
   display: flex;
+  justify-content: center;
 }
 
 .from, .to {

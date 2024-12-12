@@ -1,0 +1,30 @@
+
+.box {
+  height: 45px;
+  background-color: lightblue;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid blue;
+  margin: 8px 16px;
+}
+
+.names {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name {
+  font-weight: bold;
+  padding-right: 8px;
+}
+
+.surname {
+}
+
+.email {
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

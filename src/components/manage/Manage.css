@@ -41,7 +41,7 @@ h3 {
 
 .manage-content {
   display: grid;
-  grid-template-columns: 300px auto;
+  grid-template-columns: 310px auto;
   height: calc(100vh - 64px);
   overflow-y: auto;
 }

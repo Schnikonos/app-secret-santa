@@ -43,6 +43,6 @@ export interface Santa {
 export interface ComputeReply {
   santaRun: SantaRun;
   nbChanged: number;
-  isOk: boolean;
+  ok: boolean;
   allowSameFromTo: boolean;
 }

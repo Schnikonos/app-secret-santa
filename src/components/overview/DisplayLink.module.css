@@ -1,0 +1,14 @@
+
+.clickable {
+  cursor: pointer;
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.mystery {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}

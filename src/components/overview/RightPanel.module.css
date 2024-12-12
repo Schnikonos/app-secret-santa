@@ -1,0 +1,44 @@
+.panel {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 30% 70%;
+}
+
+.title {
+  font-size: large;
+  font-weight: bold;
+}
+
+.separator {
+  border-top: 1px solid lightgray;
+}
+
+.item {
+  cursor: pointer;
+  & + .item {
+    border-top: 1px solid lightgray;
+  }
+}
+
+.date {
+  color: gray;
+  font-size: small;
+}
+
+.selected {
+  background-color: #ffe0e0;
+}
+
+.itemContent {
+  padding: 4px 16px;
+  display: flex;
+}
+
+.name {
+  font-weight: bold;
+}
+
+.list {
+  height: calc(100% - 24px);
+  overflow-y: auto;
+}

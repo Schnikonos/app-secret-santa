@@ -1,23 +1,23 @@
-import "./Display.css";
-import "./DisplayLink.css";
+import styleCommon from "./Display.module.css";
+import styles from "./DisplayLink.module.css";
 import {Person} from "../../model";
 import {useState} from "react";
 
 function DisplayPerson(person: Person) {
   return (
     <div>
-      <div className="names">
-        <span className="name">{person.name}</span>
-        <span className="surname">{person.surname}</span>
+      <div className={styleCommon.names}>
+        <span className={styleCommon.name}>{person.name}</span>
+        <span className={styleCommon.surname}>{person.surname}</span>
       </div>
-      <div className="mail">{person.email}</div>
+      <div className={styleCommon.email}>{person.email}</div>
     </div>
   );
 }
 
 function DisplayHidden() {
   return (
-    <div className="mystery">?</div>
+    <div className={styles.mystery}>?</div>
   );
 }
 
@@ -25,7 +25,7 @@ function DisplayLink({person}: { person: Person }) {
   const [hidden, setHidden] = useState(true);
 
   return (
-    <div className="box clickable" onClick={() => setHidden(!hidden)}>
+    <div className={`${styleCommon.box} ${styles.clickable}`} onClick={() => setHidden(!hidden)}>
       {hidden ? DisplayHidden() : DisplayPerson(person)}
     </div>
   );

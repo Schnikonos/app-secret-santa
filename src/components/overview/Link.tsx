@@ -1,5 +1,5 @@
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import "./Link.css";
+import styles from "./Link.module.css";
 import {Person, SantaRunPeople} from "../../model";
 import DisplayLink from "./DisplayLink";
 import DisplayBasic from "./DisplayBasic";
@@ -20,20 +20,20 @@ function Link({person, peopleList}: {person: SantaRunPeople, peopleList: Person[
     }
   }, [person]);
 
-  return <div className="base">
-    <div className="from">
+  return <div className={styles.base}>
+    <div className={styles.from}>
       {peopleFrom ? <DisplayLink person={peopleFrom}></DisplayLink> : <></>}
     </div>
-    <div className="link">
-      <div hidden={!peopleFrom} className="arrow"><ArrowRightAltIcon></ArrowRightAltIcon></div>
+    <div className={styles.link}>
+      <div hidden={!peopleFrom} className={styles.arrow}><ArrowRightAltIcon></ArrowRightAltIcon></div>
     </div>
-    <div className="person">
+    <div className={styles.person}>
       {people ? <DisplayBasic person={people}></DisplayBasic> : <></>}
     </div>
-    <div className="link">
-      <div hidden={!peopleTo} className="arrow"><ArrowRightAltIcon></ArrowRightAltIcon></div>
+    <div className={styles.link}>
+      <div hidden={!peopleTo} className={styles.arrow}><ArrowRightAltIcon></ArrowRightAltIcon></div>
     </div>
-    <div className="to">
+    <div className={styles.to}>
       {peopleTo ? <DisplayLink person={peopleTo}></DisplayLink> : <></>}
     </div>
   </div>

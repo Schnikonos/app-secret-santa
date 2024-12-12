@@ -1,6 +1,9 @@
-import './Overview.css';
+import styles from './Overview.module.css';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import ShuffleIcon from '@mui/icons-material/Shuffle';
+import SendIcon from '@mui/icons-material/Send';
 import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
-import {Person, Santa, SantaRun, SantaRunPeople} from "../../model";
+import {ComputeReply, Person, Santa, SantaRun, SantaRunPeople} from "../../model";
 import Link from "./Link";
 import {useEffect, useState} from "react";
 import {get, post} from "../../Utils";
@@ -35,32 +38,49 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                         onManage: (santa: Santa, santaRun?: SantaRun) => void}
 ) {
     const [santaList, setSantaList] = useState<Santa[]>();
+    const [computed, setComputed] = useState(false);
     const [santaRunList, setSantaRunList] = useState<SantaRun[]>([]);
     const [openDgNewSanta, setOpenDgNewSanta] = useState(false)
 
-    async function updateSanta(newSanta: Santa) {
+    async function updateSanta(newSanta?: Santa) {
         onSelectSanta(newSanta);
         if (!newSanta) {
             setSantaRunList([]);
             onSelectRun(undefined);
+            setComputed(false);
             return;
         }
         const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/santa/${newSanta.id}/run`);
         setSantaRunList(newSantaRunList);
         if (newSantaRunList.length === 0) {
             onSelectRun(undefined);
+            setComputed(false);
             return;
         }
-        const lastRun = await get(`http://localhost:8080/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
+        const lastRun: SantaRun | undefined = await get(`http://localhost:8080/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
         onSelectRun(lastRun);
+        setComputed(!!lastRun && lastRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
     }
 
     useEffect(() => {
+        get('http://localhost:8080/santa').then(res => setSantaList(res));
         if (!selectedSanta) {
             get('http://localhost:8080/last-santa').then(res => updateSanta(res));
+        } else {
+            get(`http://localhost:8080/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res));
         }
-        get('http://localhost:8080/santa').then(res => setSantaList(res));
+        setComputed(!!selectedRun && selectedRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
     }, []);
+
+    async function refresh() {
+        const newSantaList: Santa[] = await get('http://localhost:8080/santa');
+        setSantaList(newSantaList);
+
+        if (selectedSanta) {
+            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/santa/${selectedSanta.id}/run`);
+            setSantaRunList(newSantaRunList);
+        }
+    }
 
     async function newSanta(id: number | null | undefined) {
         setOpenDgNewSanta(false);
@@ -72,12 +92,40 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         await updateSanta(newSanta);
     }
 
-    function selectSanta(selectedSanta: Santa) {
+    function selectSanta(selectedSanta?: Santa) {
         updateSanta(selectedSanta);
     }
 
-    function selectRun(selectedSantaRun: SantaRun) {
-        onSelectRun(selectedSantaRun);
+    async function selectRun(selectedSantaRun?: SantaRun) {
+        if (!selectedSantaRun) {
+            onSelectRun(undefined);
+            return;
+        }
+        const newSantaRun: SantaRun = await get(`http://localhost:8080/santa/${selectedSanta?.id}/run/${selectedSantaRun.id}`);
+        onSelectRun(newSantaRun);
+        setComputed(!!newSantaRun && newSantaRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
+    }
+
+    async function compute() {
+        const result: ComputeReply = await post(`http://localhost:8080/compute/${selectedSanta?.id}`, selectedRun);
+        if (result.ok) {
+            onSelectRun(result.santaRun);
+            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/santa/${selectedSanta?.id}/run`);
+            setSantaRunList(newSantaRunList);
+            setComputed(true);
+        }
+    }
+
+    async function reshuffle() {
+        selectedRun.peopleList.forEach(santa => {
+            santa.idPeopleTo = undefined;
+            santa.idPeopleFrom = undefined;
+        });
+        await compute();
+    }
+
+    async function sendMail() {
+
     }
 
     return <>
@@ -86,27 +134,31 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                     Secret Santa
                     {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.creationDate}]` : ''}
-                    {selectedRun ? ` - #${selectedRun.peopleList.length}` : ''}
+                    {selectedRun ? ` - ${selectedRun.peopleList.length} people` : ''}
                 </Typography>
                 <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null}>Manage</Button>
                 <Button color="inherit" onClick={() => setOpenDgNewSanta(true)}>New</Button>
             </Toolbar>
         </AppBar>
 
-        <div className="main-panel">
-            <div style={{backgroundColor: 'palegreen'}}>
-                {selectedRun ? <div>
-                    {selectedRun.peopleList.map((person: SantaRunPeople) =>
-                      <Link key={person.idPeople} person={person} peopleList={peopleList}></Link>)
-                    }
-                </div> : ''}
-                <div>
-                    <Button>Recompute</Button>
-                    <Button>Send Mail</Button>
+        <div className={styles.mainPanel}>
+            <div className={styles.subPanel}>
+                <div className={styles.listNames}>
+                    {selectedRun ? <div>
+                        {selectedRun.peopleList.map((person: SantaRunPeople) =>
+                          <Link key={person.idPeople} person={person} peopleList={peopleList}></Link>)
+                        }
+                    </div> : ''}
+                </div>
+                <div className={styles.actionBar}>
+                    <Button onClick={compute} startIcon={<AutoFixHighIcon/>} variant={"outlined"}>Compute</Button>
+                    <Button onClick={reshuffle} disabled={!computed} startIcon={<ShuffleIcon/>} variant={"outlined"}>Reshuffle</Button>
+                    <Button onClick={sendMail} disabled={!computed} startIcon={<SendIcon/>} variant={"contained"}>Send Mail</Button>
                 </div>
             </div>
-            <div>
-                <RightPanel santaList={santaList ? santaList : []} santa={selectedSanta} santaRunList={santaRunList} santaRun={selectedRun} onSelectSanta={selectSanta} onSelectRun={selectRun}></RightPanel>
+            <div className={styles.rightPanel}>
+                <RightPanel santaList={santaList ? santaList : []} santa={selectedSanta} santaRunList={santaRunList}
+                            santaRun={selectedRun} onSelectSanta={selectSanta} onSelectRun={selectRun} onRefresh={refresh}></RightPanel>
             </div>
         </div>
 

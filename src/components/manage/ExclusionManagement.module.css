@@ -21,15 +21,15 @@
   }
 }
 
-.exclusionFrom {
+.exclusionFrom > .blockTitle {
   background-color: var(--from-color);
 }
 
-.exclusionTo {
+.exclusionTo > .blockTitle {
   background-color: var(--to-color);
 }
 
-.exclusionBoth {
+.exclusionBoth > .blockTitle {
   background-color: var(--both-color);
 }
 
