@@ -4,6 +4,10 @@
   grid-template-rows: 30% 70%;
 }
 
+.subPanel {
+
+}
+
 .title {
   font-size: large;
   font-weight: bold;

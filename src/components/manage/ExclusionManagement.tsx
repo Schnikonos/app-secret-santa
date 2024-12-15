@@ -7,7 +7,7 @@ import {useEffect, useReducer, useState} from "react";
 function ExclusionManagement({selectedPerson, activePeopleList}: {selectedPerson?: Person, activePeopleList: Person[]}) {
   const [filteredActivePeopleList, setFilteredActivePeopleList] = useState<Person[]>([]);
   const [selectedItems, setSelectedItems] = useState<Person[]>([]);
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  const [, forceUpdate] = useReducer(x => x + 1, 0, () => 0);
 
   useEffect(() => {
     setFilteredActivePeopleList(activePeopleList.filter(p => p.id !== selectedPerson?.id));

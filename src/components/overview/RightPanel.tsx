@@ -41,7 +41,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
   }
 
   async function deleteSanta(selectedSanta: Santa) {
-    await deleteCall(`http://localhost:8080/santa/${selectedSanta.id}`);
+    await deleteCall(`http://localhost:8080/person/santa/${selectedSanta.id}`);
     if (selectedSanta.id === santa?.id) {
       onSelectSanta(undefined);
     }
@@ -49,7 +49,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
   }
 
   async function deleteRun(selectedSantaRun: SantaRun) {
-    await deleteCall(`http://localhost:8080/santa/${santa?.id}/run/${selectedSantaRun.id}`);
+    await deleteCall(`http://localhost:8080/person/santa/${santa?.id}/run/${selectedSantaRun.id}`);
     if (selectedSantaRun.id === santaRun?.id) {
       onSelectRun(undefined);
     }

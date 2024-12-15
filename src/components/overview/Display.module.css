@@ -1,11 +1,23 @@
 
-.box {
+.container {
   height: 45px;
-  background-color: lightblue;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid blue;
   margin: 8px 16px;
+  border: 1px solid white;
+  position: relative;
+}
+
+.box {
+  background-color: #eff9ff;
+  padding: 8px 40px;
+  border-radius: 8px;
+  border: 1px solid #949494;
+  position: relative;
+}
+
+.deleteButton {
+  position: absolute !important;
+  right: 0;
+  top: 0;
 }
 
 .names {
@@ -27,4 +39,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+[result-state="ok"] {
+  background-color: #f3fff5 !important;
+}
+
+[result-state="mailNotSent"] {
+  background-color: #f9ffdf !important;
+}
+
+[result-state="noFromTo"] {
+  background-color: #ffe8cb !important;
+}
+
+[result-state="removed"] {
+  background-color: #ffd5d5 !important;
+}
+
+.actionButton {
+  position: absolute !important;
+  left: 0;
+  top: 0;
 }

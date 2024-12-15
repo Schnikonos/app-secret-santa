@@ -4,11 +4,17 @@ export interface Person {
   name: string;
   surname: string;
   email: string;
+  groups: PersonGroup[];
 
   isSelected?: boolean;
   willNotReceiveFrom: Person[];
   willNotGiveTo: Person[];
   noRelationTo: Person[];
+}
+
+export interface PersonGroup {
+  id?: number;
+  name: string;
 }
 
 export interface SantaRunExclusion {
@@ -22,6 +28,9 @@ export interface SantaRunPeople {
   idPeopleTo?: number;
   mailSent: boolean;
   exclusions: SantaRunExclusion[];
+  isLocked?: boolean;
+
+  isRemoved: boolean;
 }
 
 export interface SantaRun {
@@ -45,4 +54,18 @@ export interface ComputeReply {
   nbChanged: number;
   ok: boolean;
   allowSameFromTo: boolean;
+}
+
+export interface MailParameter {
+  mailUser?: string;
+  mailPassword?: string;
+  mailPort?: number;
+}
+
+export interface MailTemplate {
+  id: number;
+  name: string;
+  title: string;
+  template: string
+  isHtml: boolean;
 }

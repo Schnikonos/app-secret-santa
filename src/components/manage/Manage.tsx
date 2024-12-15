@@ -1,4 +1,4 @@
-import "./Manage.css";
+import styles from "./Manage.module.css";
 import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
 import {Person, Santa, SantaRun, SantaRunExclusion} from "../../model";
 import {useEffect, useState} from "react";
@@ -14,14 +14,14 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
 
   useEffect(() => {
     setId(person?.id);
-    setName(person?.name ? person?.name : '');
-    setSurname(person?.surname ? person?.surname : '');
-    setEmail(person?.email ? person?.email : '');
+    setName(person?.name || '');
+    setSurname(person?.surname || '');
+    setEmail(person?.email || '');
   }, [person, open]);
 
   async function deletePerson() {
     try {
-      await deleteCall(`http://localhost:8080/people/${person?.id}`);
+      await deleteCall(`http://localhost:8080/person/people/${person?.id}`);
       handleClose(person);
     } catch (error) {
       handleClose(null);
@@ -30,7 +30,7 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
 
   async function save() {
     try {
-      const savedPerson: Person = await post(`http://localhost:8080/people`, {id, name, surname, email});
+      const savedPerson: Person = await post(`http://localhost:8080/person/people`, {id, name, surname, email});
       if (person) {
         person.name = savedPerson.name;
         person.surname = savedPerson.surname;
@@ -45,18 +45,18 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
   return (
     <Dialog onClose={() => handleClose(null)} open={open}>
       <DialogTitle>{person ? 'Edit person' : 'Add new person'}</DialogTitle>
-      <div className="dialog-content">
-        <div className="name-fields">
+      <div className={styles.dialogContent}>
+        <div className={styles.nameFields}>
           <TextField id="name" label="Name" value={name} onChange={e => setName(e.target.value)}/>
           <TextField id="surname" label="Surname" value={surname} onChange={e => setSurname(e.target.value)}/>
         </div>
-        <div className="email-fields">
+        <div className={styles.emailFields}>
           <TextField id="email" label="Email" value={email} onChange={e => setEmail(e.target.value)}/>
         </div>
       </div>
-      <div className="dialog-footer">
+      <div className={styles.dialogFooter}>
         {person?.id ? <Button onClick={() => deletePerson()}>Delete</Button> : <div></div>}
-        <Button onClick={() => save()}>Save</Button>
+        <Button onClick={() => save()} variant='contained'>Save</Button>
       </div>
     </Dialog>
   );
@@ -127,7 +127,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
       }
       if (selectedRun.peopleList.find(p => p.idPeople === person.id) === undefined) {
         const exclusions: SantaRunExclusion[] = [...person.willNotGiveTo.map(p => ({idPeople: p.id})), ...person.noRelationTo.map(p => ({idPeople: p.id}))];
-        selectedRun.peopleList = [...selectedRun.peopleList, {idPeople: person.id, exclusions, mailSent: false}];
+        selectedRun.peopleList = [...selectedRun.peopleList, {idPeople: person.id, exclusions, mailSent: false, isRemoved: false}];
       }
     } else if (!isActive) {
       setActivePeopleList(activePeopleList.filter(p => p.id !== person.id))
@@ -146,15 +146,35 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
   }
 
   function save() {
-    selectedRun.peopleList = [];
     gatherData();
 
     peopleList.forEach(p => {
-      if (p.isSelected) {
+      if (!p.isSelected) {
+        return;
+      }
+
+      const exclusions = Array.from(new Set([...p.willNotGiveTo.map(p1 => p1.id), ...p.noRelationTo.map(p1 => p1.id)])).map(p1 => ({idPeople: p1}));
+
+      const current = selectedRun.peopleList.find(e => e.idPeople === p.id);
+      if (current) { // if element is find, we just update its exclusions
+        current.exclusions = exclusions;
+
+        // if peopleTo is excluded not selected, we reset it
+        if (current.idPeopleTo === undefined || exclusions.find(e => e.idPeople === current.idPeopleTo) !== undefined || !peopleList.find(e => e.id === current.idPeopleTo)?.isSelected) {
+          current.idPeopleTo = undefined;
+          current.mailSent = false;
+        }
+
+        const peopleFrom = peopleList.find(e => e.id === current.idPeopleFrom);
+        if (!peopleFrom?.isSelected || peopleFrom.willNotGiveTo.find(e => e.id === current.idPeople) || peopleFrom.noRelationTo.find(e => e.id === current.idPeople)) {
+          current.idPeopleFrom = undefined;
+        }
+      } else {
         selectedRun.peopleList.push({
           idPeople: p.id,
-          exclusions: Array.from(new Set([...p.willNotGiveTo.map(p1 => p1.id), ...p.noRelationTo.map(p1 => p1.id)])).map(p1 => ({idPeople: p1})),
-          mailSent: false
+          exclusions,
+          mailSent: false,
+          isRemoved: false,
         });
       }
     });
@@ -195,15 +215,15 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
           <Button color="inherit" onClick={save}>Save</Button>
         </Toolbar>
       </AppBar>
-      <div className="manage-content">
-        <div className="people-main-list block">
-          <div className="block-title">
+      <div className={styles.manageContent}>
+        <div className={`${styles.peopleMainList} ${styles.block}`}>
+          <div className={styles.blockTitle}>
             <h3>People</h3>
             <Button onClick={addPeople}>Add People</Button>
           </div>
-          <div className="list">
+          <div className={styles.list}>
             {peopleList.map((person) => (
-              <div key={person.id} className="people-item" is-selected={person.id === selectedPerson?.id ? 'true' : 'false'} onClick={() => setSelectedPerson(person)}>
+              <div key={person.id} className={styles.peopleItem} is-selected={person.id === selectedPerson?.id ? 'true' : 'false'} onClick={() => setSelectedPerson(person)}>
                 <PeopleItem person={person} onToggleActive={isActive => toggleActive(person, isActive)} onEdit={() => editPeople(person)}></PeopleItem>
               </div>
             ))}

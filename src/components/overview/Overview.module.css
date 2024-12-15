@@ -27,3 +27,10 @@
   height: calc(100% - 53px);
   overflow-y: auto;
 }
+
+.addPerson {
+  padding-top: 8px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

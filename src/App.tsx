@@ -21,7 +21,7 @@ function App() {
   }, []);
 
   function refreshPeopleList(cbk: () => void) {
-    get("http://localhost:8080/people").then(res => {
+    get("http://localhost:8080/person/people").then(res => {
       setPeopleList(res);
       cbk();
     });
