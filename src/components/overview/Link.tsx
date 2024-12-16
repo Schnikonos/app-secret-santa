@@ -5,11 +5,12 @@ import DisplayLink from "./DisplayLink";
 import DisplayBasic, {ResultState} from "./DisplayBasic";
 import {useEffect, useState} from "react";
 
-function Link({peopleList, santaRunPeopleList, removeFromTo, person, addPeopleList, addPersonFromTo}:
+function Link({peopleList, santaRunPeopleList, removeFromTo, person, addPeopleList, addPersonFromTo, sendSingleMail}:
               {peopleList: Person[], santaRunPeopleList: SantaRunPeople[],
                 removeFromTo: (from: number | undefined, to: number | undefined) => void, person: SantaRunPeople,
                 addPeopleList: Person[],
                 addPersonFromTo: (pFrom?: Person, pTo?: Person) => void,
+                sendSingleMail: (person: SantaRunPeople) => void,
               }) {
   const [people, setPeople] = useState<Person>();
   const [peopleFrom, setPeopleFrom] = useState<Person>();
@@ -59,10 +60,6 @@ function Link({peopleList, santaRunPeopleList, removeFromTo, person, addPeopleLi
     setIsLocked(!isLocked);
   }
 
-  function sendMail() {
-
-  }
-
   return <div className={styles.base}>
     <div className={styles.from}>
       <DisplayLink person={peopleFrom} remove={removeLinkFrom} addPerson={(p) => addPersonFromTo(p, people)} peopleList={addPeopleList} notInList={[person.idPeople]}></DisplayLink>
@@ -71,7 +68,7 @@ function Link({peopleList, santaRunPeopleList, removeFromTo, person, addPeopleLi
       <div hidden={!peopleFrom} className={styles.arrow}><ArrowRightAltIcon></ArrowRightAltIcon></div>
     </div>
     <div className={styles.person}>
-      {people ? <DisplayBasic person={people} remove={removePerson} resultState={computeState()} sendMail={sendMail} runPerson={person}></DisplayBasic> : <></>}
+      {people ? <DisplayBasic person={people} remove={removePerson} resultState={computeState()} sendMail={() => sendSingleMail(person)} runPerson={person}></DisplayBasic> : <></>}
     </div>
     <div className={styles.link}>
       <div hidden={!peopleTo} className={styles.arrow}><ArrowRightAltIcon></ArrowRightAltIcon></div>

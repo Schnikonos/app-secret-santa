@@ -57,16 +57,17 @@ export interface ComputeReply {
   allowSameFromTo: boolean;
 }
 
-export interface MailParameter {
-  mailUser?: string;
-  mailPassword?: string;
-  mailPort?: number;
-}
+export type MailType = 'text' | 'html' | 'eml';
 
 export interface MailTemplate {
   id: number;
   name: string;
   title: string;
   template: string
-  isHtml: boolean;
+  typeMail: MailType;
+}
+
+export interface MailReply {
+  success: boolean;
+  nbMail: number;
 }

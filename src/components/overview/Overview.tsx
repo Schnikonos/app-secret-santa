@@ -3,7 +3,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import SendIcon from '@mui/icons-material/Send';
 import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
-import {ComputeReply, Person, Santa, SantaRun, SantaRunPeople} from "../../model";
+import {ComputeReply, MailReply, Person, Santa, SantaRun, SantaRunPeople} from "../../model";
 import Link from "./Link";
 import {useEffect, useState} from "react";
 import {get, post} from "../../Utils";
@@ -73,26 +73,26 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     async function handleOnLoginSuccess(resp: Omit<TokenResponse, "error" | "error_description" | "error_uri">) {
         await post('http://localhost:8080/email/token', {token: resp.access_token});
-        sendMails(mailsToSend);
+        executeSendMails(mailsToSend);
     }
 
-    function sendMails(mails: SantaRunPeople[]) {
-        console.log('sendMails', mails);
-        // const mailBody: SantaRun
+    async function executeSendMails(mails: SantaRunPeople[]) {
+        const query: SantaRun = {id: selectedRun.id, peopleList: mails};
+        const reply: MailReply = await post(`http://localhost:8080/email/mail/${selectedSanta?.id}`, query);
     }
 
     async function updateSanta(newSanta?: Santa) {
         onSelectSanta(newSanta);
         if (!newSanta) {
             setSantaRunList([]);
-            onSelectRun(undefined);
+            onSelectRun({peopleList: []});
             setComputed(false);
             return;
         }
         const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${newSanta.id}/run`);
         setSantaRunList(newSantaRunList);
         if (newSantaRunList.length === 0) {
-            onSelectRun(undefined);
+            onSelectRun({peopleList: []});
             setComputed(false);
             return;
         }
@@ -103,9 +103,9 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     useEffect(() => {
         get('http://localhost:8080/person/santa').then(res => setSantaList(res));
-        if (!selectedSanta) {
+        if (!selectedSanta && !selectedRun) {
             get('http://localhost:8080/person/last-santa').then(res => updateSanta(res));
-        } else {
+        } else if (selectedSanta) {
             get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res));
         }
         setComputed(!!selectedRun && selectedRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
@@ -168,12 +168,16 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         await compute();
     }
 
-    async function sendMail() {
+    function sendAllMails() {
+        sendMail(runPersonList);
+    }
+
+    async function sendMail(runPeoples: SantaRunPeople[]) {
         const res = await get('http://localhost:8080/email/token');
         if (!!res) {
-            await sendMails([{id: 42, mailSent: false, isRemoved: false, idPeople: 43, exclusions: []}]);
+            await executeSendMails(runPeoples);
         } else {
-            setMailsToSend([{id: 24, mailSent: false, isRemoved: false, idPeople: 34, exclusions: []}])
+            setMailsToSend(runPeoples)
             login();
         }
     }
@@ -234,6 +238,11 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         setOpenDgNewSanta(true);
     }
 
+    function sendSingleMail(person: SantaRunPeople) {
+        person.mailSent = false;
+        sendMail([person]);
+    }
+
     return <>
         <AppBar position="static">
             <Toolbar>
@@ -256,7 +265,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                     {runPersonList ? <div>
                         {runPersonList.map((person: SantaRunPeople) =>
                           <div key={person.idPeople}>
-                              <Link santaRunPeopleList={runPersonList} person={person} peopleList={peopleList} removeFromTo={removeFromTo} addPersonFromTo={addPersonFromTo} addPeopleList={currentPersonList}></Link>
+                              <Link santaRunPeopleList={runPersonList} person={person} peopleList={peopleList} removeFromTo={removeFromTo} addPersonFromTo={addPersonFromTo} addPeopleList={currentPersonList} sendSingleMail={sendSingleMail}></Link>
                           </div>
                         )}
                     </div> : ''}
@@ -264,7 +273,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 <div className={styles.actionBar}>
                     <Button onClick={compute} startIcon={<AutoFixHighIcon/>} variant='outlined'>Compute</Button>
                     <Button onClick={reshuffle} disabled={!computed} startIcon={<ShuffleIcon/>} variant="outlined">Reshuffle</Button>
-                    <Button onClick={sendMail} disabled={!computed} startIcon={<SendIcon/>} variant="contained">Send Mail</Button>
+                    <Button onClick={sendAllMails} disabled={!computed} startIcon={<SendIcon/>} variant="contained">Send Mail</Button>
                 </div>
             </div>
             <div className={styles.rightPanel}>
