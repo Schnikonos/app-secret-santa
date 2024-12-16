@@ -43,6 +43,7 @@ export interface SantaRun {
 export interface Santa {
   id?: number;
   name: string;
+  secretSantaDate?: string;
   creationDate?: string;
   lastUpdate?: string;
 

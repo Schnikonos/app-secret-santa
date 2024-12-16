@@ -3,12 +3,21 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {Santa, SantaRun} from "../../model";
 import {deleteCall, formatDate} from "../../Utils";
 import {IconButton} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import React from "react";
 
-function ListItem({name, creationDate, lastUpdate, onDelete}: {name: string, creationDate?: string, lastUpdate?: string, onDelete: () => void}) {
+function ListItem({name, creationDate, lastUpdate, onDelete, onUpdate}: {name: string, creationDate?: string, lastUpdate?: string, onDelete: () => void, onUpdate?: () => void}) {
   function clickDelete(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation();
     e.preventDefault();
     onDelete();
+  }
+
+  function clickUpdate(e: React.MouseEvent<HTMLButtonElement>) {
+    if (onUpdate) {
+      e.stopPropagation();
+      onUpdate();
+    }
   }
 
   return (
@@ -20,14 +29,17 @@ function ListItem({name, creationDate, lastUpdate, onDelete}: {name: string, cre
         <div className={styles.name}>{name}</div>
         <div className={styles.date}>{formatDate(creationDate)}</div>
       </div>
+      <div>
+        {onUpdate && (<IconButton onClick={clickUpdate}><EditIcon/></IconButton>)}
+      </div>
     </div>
   );
 }
 
-function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, onSelectRun, onRefresh}:
+function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, onSelectRun, onRefresh, onUpdateSanta}:
                       {
                         santaList: Santa[], santa?: Santa, santaRunList: SantaRun[], santaRun?: SantaRun,
-                        onSelectSanta: (santa?: Santa) => void, onSelectRun: (santaRun?: SantaRun) => void, onRefresh: () => void}) {
+                        onSelectSanta: (santa?: Santa) => void, onSelectRun: (santaRun?: SantaRun) => void, onRefresh: () => void, onUpdateSanta: (santa?: Santa) => void}) {
   function selectSanta(selectedSanta: Santa) {
     if (selectedSanta.id !== santa?.id) {
       onSelectSanta(selectedSanta);
@@ -63,7 +75,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
         <div className={styles.list}>
           {santaList.map(value =>
             <div key={value.id} className={`${styles.item} ${value.id === santa?.id ? styles.selected : ''}`} onClick={() => selectSanta(value)}>
-              <ListItem name={value.name} creationDate={value.creationDate} lastUpdate={value.lastUpdate} onDelete={() => deleteSanta(value)}></ListItem>
+              <ListItem name={value.name} creationDate={value.creationDate} lastUpdate={value.lastUpdate} onDelete={() => deleteSanta(value)} onUpdate={() => onUpdateSanta(value)}></ListItem>
             </div>
           )}
         </div>

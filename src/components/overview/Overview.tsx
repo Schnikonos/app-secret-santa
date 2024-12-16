@@ -11,12 +11,22 @@ import RightPanel from "./RightPanel";
 import AddPerson from "./AddPerson";
 import {TokenResponse, useGoogleLogin} from "@react-oauth/google";
 
-function NewSantaDialog({open, handleClose}: {open: boolean, handleClose: (id: number | null | undefined) => void}) {
-    const [santaName, setSantaName] = useState<string>()
+function NewSantaDialog({open, santaInput, handleClose}: {open: boolean, santaInput?: Santa, handleClose: (id: number | null | undefined) => void}) {
+    const [santaName, setSantaName] = useState<string>('')
+    const [santaDate, setSantaDate] = useState<string>('')
+
+    useEffect(() => {
+        setSantaName(santaInput?.name || '');
+        setSantaDate(santaInput?.secretSantaDate || '');
+    }, [santaInput]);
 
     async function save() {
         try {
-            const santa: Santa = await post(`http://localhost:8080/person/santa`, {name: santaName});
+            const santa: Santa = await post(`http://localhost:8080/person/santa`, {id: santaInput?.id, name: santaName, secretSantaDate: santaDate});
+            if (santaInput) {
+                santaInput.name = santaName;
+                santaInput.secretSantaDate = santaDate;
+            }
             handleClose(santa.id);
         } catch (error) {
             handleClose(null);
@@ -26,7 +36,8 @@ function NewSantaDialog({open, handleClose}: {open: boolean, handleClose: (id: n
     return (
       <Dialog onClose={() => handleClose(null)} open={open}>
           <DialogTitle>Set backup account</DialogTitle>
-          <TextField id="name" label="Name" onChange={e => setSantaName(e.target.value)}/>
+          <TextField id="name" label="Name" value={santaName} onChange={e => setSantaName(e.target.value)}/>
+          <TextField id="date" label="Date" value={santaDate} onChange={e => setSantaDate(e.target.value)}/>
           <Button onClick={() => save()}>Save</Button>
       </Dialog>
     );
@@ -54,6 +65,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     const [currentPersonList, setCurrentPersonList] = useState<Person[]>([]);
 
     const [mailsToSend, setMailsToSend] = useState<SantaRunPeople[]>([]);
+    const [santaToUpdate, setSantaToUpdate] = useState<Santa>();
 
     function handleOnLoginError(err: Pick<TokenResponse, "error" | "error_description" | "error_uri">) {
         console.log(err);
@@ -66,7 +78,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     function sendMails(mails: SantaRunPeople[]) {
         console.log('sendMails', mails);
-        const mailBody: SantaRun
+        // const mailBody: SantaRun
     }
 
     async function updateSanta(newSanta?: Santa) {
@@ -212,6 +224,16 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         setRunPersonList([...newRunPeopleList]);
     }
 
+    function updateSantaItem(santa?: Santa) {
+        setSantaToUpdate(santa);
+        setOpenDgNewSanta(true);
+    }
+
+    function newSantaDialog() {
+        setSantaToUpdate(undefined);
+        setOpenDgNewSanta(true);
+    }
+
     return <>
         <AppBar position="static">
             <Toolbar>
@@ -221,7 +243,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                     {selectedRun ? ` - ${runPersonList.length} people` : ''}
                 </Typography>
                 <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null}>Manage</Button>
-                <Button color="inherit" onClick={() => setOpenDgNewSanta(true)}>New</Button>
+                <Button color="inherit" onClick={newSantaDialog}>New</Button>
             </Toolbar>
         </AppBar>
 
@@ -246,12 +268,12 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 </div>
             </div>
             <div className={styles.rightPanel}>
-                <RightPanel santaList={santaList ? santaList : []} santa={selectedSanta} santaRunList={santaRunList}
+                <RightPanel santaList={santaList ? santaList : []} santa={selectedSanta} santaRunList={santaRunList} onUpdateSanta={updateSantaItem}
                             santaRun={selectedRun} onSelectSanta={selectSanta} onSelectRun={selectRun} onRefresh={refresh}></RightPanel>
             </div>
         </div>
 
-        <NewSantaDialog open={openDgNewSanta} handleClose={(id) => newSanta(id)}></NewSantaDialog>
+        <NewSantaDialog open={openDgNewSanta} santaInput={santaToUpdate} handleClose={(id) => newSanta(id)}></NewSantaDialog>
     </>
 }
 
