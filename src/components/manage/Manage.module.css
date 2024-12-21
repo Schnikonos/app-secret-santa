@@ -40,10 +40,57 @@ h3 {
   }
 }
 
+.groupFilter {
+  display: flex;
+}
+
 .manageContent {
+
+}
+
+.groupContent {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid lightgray;
+}
+
+.addGroupContent {
+  display: flex;
+  align-items: center;
+}
+
+.createGroup {
+  display: flex;
+  & > * + * {
+    margin-left: 16px;
+  }
+}
+
+.groupLabel {
+  font-style: italic;
+  user-select: none;
+  cursor: auto;
+  margin: 8px 0;
+}
+
+.addGroup {
+
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chip {
+  margin-left: 8px
+}
+
+.manageContentSubBlock {
   display: grid;
   grid-template-columns: 310px auto;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
@@ -52,7 +99,7 @@ h3 {
 }
 
 .list {
-  height: calc(100vh - 130px);;
+  height: calc(100vh - 182px);
   overflow-y: auto;
   overflow-x: hidden;
 }

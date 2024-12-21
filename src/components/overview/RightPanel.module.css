@@ -34,12 +34,20 @@
 }
 
 .itemContent {
-  padding: 4px 16px;
-  display: flex;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 40px auto 40px;
+}
+
+.itemInfo {
+  width: 210px;
 }
 
 .name {
   font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .list {

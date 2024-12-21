@@ -25,7 +25,7 @@ function ListItem({name, creationDate, lastUpdate, onDelete, onUpdate}: {name: s
       <div>
         <IconButton onClick={clickDelete}><DeleteIcon/></IconButton>
       </div>
-      <div>
+      <div className={styles.itemInfo}>
         <div className={styles.name}>{name}</div>
         <div className={styles.date}>{formatDate(creationDate)}</div>
       </div>
@@ -74,7 +74,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
         <div className={styles.title}>SecretSantas</div>
         <div className={styles.list}>
           {santaList.map(value =>
-            <div key={value.id} className={`${styles.item} ${value.id === santa?.id ? styles.selected : ''}`} onClick={() => selectSanta(value)}>
+            <div key={value.id} className={`${styles.item} ${value.id === santa?.id && styles.selected}`} onClick={() => selectSanta(value)} title={`[${value.secretSantaDate}] - ${value.name}`}>
               <ListItem name={value.name} creationDate={value.creationDate} lastUpdate={value.lastUpdate} onDelete={() => deleteSanta(value)} onUpdate={() => onUpdateSanta(value)}></ListItem>
             </div>
           )}

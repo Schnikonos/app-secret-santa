@@ -1,22 +1,46 @@
 import styles from "./Manage.module.css";
-import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
-import {Person, Santa, SantaRun, SantaRunExclusion} from "../../model";
-import {useEffect, useState} from "react";
+import {
+  AppBar,
+  Button,
+  Chip,
+  Dialog,
+  DialogTitle,
+  IconButton,
+  Menu,
+  MenuItem,
+  TextField,
+  Toolbar,
+  Typography
+} from "@mui/material";
+import {Person, PersonGroup, Santa, SantaRun, SantaRunExclusion} from "../../model";
+import React, {useEffect, useState} from "react";
 import {deleteCall, post} from "../../Utils";
 import PeopleItem from "./PeopleItem";
 import ExclusionManagement from "./ExclusionManagement";
+import GroupFilter from "../groupFilter/GroupFilter";
+import AddIcon from "@mui/icons-material/Add";
 
-function PersonDialog({person, open, handleClose}: {person?: Person, open: boolean, handleClose: (person: Person | null | undefined) => void}) {
+function PersonDialog({person, open, handleClose, availableGroups, onRefreshGroup}:
+                      {person?: Person, open: boolean, handleClose: (person: Person | null | undefined) => void,
+                        availableGroups: PersonGroup[], onRefreshGroup: () => void}) {
   const [id, setId] = useState<number>();
   const [name, setName] = useState<string>('');
   const [surname, setSurname] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+  const [groups, setGroups] = useState<PersonGroup[]>([]);
+
+  const [newGroupName, setNewGroupName] = useState<string>();
+  const [showCreateNewGroup, setShowCreateNewGroup] = useState<boolean>(false);
+
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
 
   useEffect(() => {
     setId(person?.id);
     setName(person?.name || '');
     setSurname(person?.surname || '');
     setEmail(person?.email || '');
+    setGroups(person?.groups || []);
   }, [person, open]);
 
   async function deletePerson() {
@@ -30,16 +54,49 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
 
   async function save() {
     try {
-      const savedPerson: Person = await post(`http://localhost:8080/person/people`, {id, name, surname, email});
+      const savedPerson: Person = await post(`http://localhost:8080/person/people`, {id, name, surname, email, groups});
       if (person) {
         person.name = savedPerson.name;
         person.surname = savedPerson.surname;
         person.email = savedPerson.email;
+        person.groups = savedPerson.groups;
       }
       handleClose(savedPerson);
     } catch (error) {
       handleClose(null);
     }
+  }
+
+  function onDeleteGroup(group: PersonGroup) {
+    setGroups(groups.filter(g => g.id !== group.id));
+  }
+
+  function handleAddGroupClose(group?: PersonGroup) {
+    setAnchorEl(null);
+    if (group) {
+      setGroups([...groups, group].sort((a, b) => a.name.localeCompare(b.name)));
+    }
+  }
+
+  function saveNewGroup() {
+    if (!newGroupName || availableGroups.find(g => g.name === newGroupName)) {
+      return;
+    }
+    post(`http://localhost:8080/person/people-group`, {name: newGroupName}).then((res: PersonGroup) => {
+      onRefreshGroup();
+      setGroups([...groups, res].sort((a, b) => a.name.localeCompare(b.name)));
+    });
+    setShowCreateNewGroup(false);
+  }
+
+  const handleAddGroupClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  }
+
+  function onShowCreateNewGroup() {
+    setAnchorEl(null);
+    setNewGroupName('');
+    setShowCreateNewGroup(true);
   }
 
   return (
@@ -53,6 +110,26 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
         <div className={styles.emailFields}>
           <TextField id="email" label="Email" value={email} onChange={e => setEmail(e.target.value)}/>
         </div>
+        <div className={styles.groupContent}>
+          <div className={styles.groupLabel} title='You can associate the person to some groups, which can then be used as filters to see only certain people'>Group</div>
+          {showCreateNewGroup && <div className={styles.createGroup}>
+            <TextField value={newGroupName} onChange={e => setNewGroupName(e.target.value)}></TextField>
+            <Button disabled={!newGroupName || !!availableGroups.find(g => g.name === newGroupName)}
+                    onClick={saveNewGroup}>Save New Group</Button>
+          </div>}
+          <div className={styles.chips}>
+            <div className={styles.addGroup}>
+              <IconButton onClick={handleAddGroupClick} color="primary"><AddIcon/></IconButton>
+              <Menu anchorEl={anchorEl} open={openMenu} onClose={() => handleAddGroupClose()}>
+                <MenuItem onClick={onShowCreateNewGroup}><AddIcon/> Create New Group</MenuItem>
+                {availableGroups.filter(g => !groups.find(g2 => g2.id === g.id)).map(group => (
+                  <MenuItem key={group.id} onClick={() => handleAddGroupClose(group)}>{group.name}</MenuItem>
+                ))}
+              </Menu>
+            </div>
+            {groups.map((group) => (<Chip className={styles.chip} label={group.name} onDelete={() => onDeleteGroup(group)} variant="outlined" color="primary"/>))}
+          </div>
+        </div>
       </div>
       <div className={styles.dialogFooter}>
         {person?.id ? <Button onClick={() => deletePerson()}>Delete</Button> : <div></div>}
@@ -62,11 +139,14 @@ function PersonDialog({person, open, handleClose}: {person?: Person, open: boole
   );
 }
 
-function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeopleList}:
-                  {peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun, onBack: () => void, onUpdatedPeopleList: (cbk: () => void) => void}) {
+function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeopleList, filters, onSetFilters, availableFilters, onRefreshAvailableFilters}:
+                  {peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun, onBack: (run: SantaRun) => void, onUpdatedPeopleList: (cbk: () => void) => void,
+                    filters: PersonGroup[], onSetFilters: (filters: PersonGroup[]) => void,
+                  availableFilters: PersonGroup[], onRefreshAvailableFilters: () => void}) {
   const [openPersonDialog, setOpenPersonDialog] = useState<boolean>(false);
   const [selectedPerson, setSelectedPerson] = useState<Person>();
   const [activePeopleList, setActivePeopleList] = useState<Person[]>([]);
+  const [filteredPeopleList, setFilteredPeopleList] = useState<Person[]>([]);
 
   function peopleListChanged() {
     selectedRun.peopleList = selectedRun.peopleList.filter(p => peopleList.find(p2 => p2.id === p.idPeople) !== undefined);
@@ -104,9 +184,22 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     setActivePeopleList(peopleList.filter(p => p.isSelected));
   }
 
+  function filterPeople(filters: PersonGroup[], peopleList: Person[]) {
+    if (filters.length === 0) {
+      setFilteredPeopleList(peopleList);
+    } else {
+      setFilteredPeopleList(peopleList.filter(p => p.groups.some(g => filters.find(f => f.id === g.id))));
+    }
+  }
+
   useEffect(() => {
     peopleListChanged();
+    filterPeople(filters, peopleList);
   }, [peopleList]);
+
+  useEffect(() => {
+    filterPeople(filters, peopleList);
+  }, [filters]);
 
   function handleCloseEditPerson(person?: Person | null) {
     setOpenPersonDialog(false);
@@ -178,7 +271,8 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
         });
       }
     });
-    onBack();
+    console.log(selectedRun);
+    onBack(selectedRun);
   }
 
   function gatherData() {
@@ -208,32 +302,41 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     <div>
       <AppBar position="static">
         <Toolbar>
-          <Button color="inherit" onClick={onBack}>Back</Button>
+          <Button color="inherit" onClick={() => onBack(selectedRun)}>Back</Button>
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-            Manage {selectedSanta?.name}
+            Manage {selectedSanta?.name} [{selectedSanta?.secretSantaDate}]
           </Typography>
           <Button color="inherit" onClick={save}>Save</Button>
         </Toolbar>
       </AppBar>
       <div className={styles.manageContent}>
-        <div className={`${styles.peopleMainList} ${styles.block}`}>
-          <div className={styles.blockTitle}>
-            <h3>People</h3>
-            <Button onClick={addPeople}>Add People</Button>
-          </div>
-          <div className={styles.list}>
-            {peopleList.map((person) => (
-              <div key={person.id} className={styles.peopleItem} is-selected={person.id === selectedPerson?.id ? 'true' : 'false'} onClick={() => setSelectedPerson(person)}>
-                <PeopleItem person={person} onToggleActive={isActive => toggleActive(person, isActive)} onEdit={() => editPeople(person)}></PeopleItem>
-              </div>
-            ))}
-          </div>
-        </div>
         <div>
-          <ExclusionManagement activePeopleList={activePeopleList} selectedPerson={selectedPerson}></ExclusionManagement>
+          <GroupFilter filters={filters} onSetFilters={onSetFilters} availableFilters={availableFilters}></GroupFilter>
+        </div>
+        <div className={styles.manageContentSubBlock}>
+          <div className={`${styles.peopleMainList} ${styles.block}`}>
+            <div className={styles.blockTitle}>
+              <h3>People</h3>
+              <Button onClick={addPeople}>Add People</Button>
+            </div>
+            <div className={styles.list}>
+              {filteredPeopleList.map((person) => (
+                <div key={person.id} className={styles.peopleItem}
+                     is-selected={person.id === selectedPerson?.id ? 'true' : 'false'}
+                     onClick={() => setSelectedPerson(person)}>
+                  <PeopleItem person={person} onToggleActive={isActive => toggleActive(person, isActive)}
+                              onEdit={() => editPeople(person)}></PeopleItem>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <ExclusionManagement activePeopleList={activePeopleList}
+                                 selectedPerson={selectedPerson}></ExclusionManagement>
+          </div>
         </div>
       </div>
-      <PersonDialog open={openPersonDialog} handleClose={handleCloseEditPerson} person={selectedPerson}></PersonDialog>
+      <PersonDialog open={openPersonDialog} handleClose={handleCloseEditPerson} person={selectedPerson} availableGroups={availableFilters} onRefreshGroup={onRefreshAvailableFilters}></PersonDialog>
     </div>
   );
 }

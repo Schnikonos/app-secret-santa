@@ -1,7 +1,7 @@
 
 .mainPanel {
   display: grid;
-  grid-template-columns: auto 250px;
+  grid-template-columns: auto 300px;
   height: calc(100vh - 64px);
   overflow: hidden;
 }
@@ -12,6 +12,13 @@
 
 .rightPanel {
   height: calc(100vh - 64px);
+}
+
+.newSantaFields {
+  padding: 8px 16px;
+  width: 460px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .actionBar {

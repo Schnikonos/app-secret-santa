@@ -3,13 +3,14 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import SendIcon from '@mui/icons-material/Send';
 import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
-import {ComputeReply, MailReply, Person, Santa, SantaRun, SantaRunPeople} from "../../model";
+import {ComputeReply, MailReply, Person, PersonGroup, Santa, SantaRun, SantaRunPeople} from "../../model";
 import Link from "./Link";
 import {useEffect, useState} from "react";
 import {get, post} from "../../Utils";
 import RightPanel from "./RightPanel";
 import AddPerson from "./AddPerson";
 import {TokenResponse, useGoogleLogin} from "@react-oauth/google";
+import GroupFilter from "../groupFilter/GroupFilter";
 
 function NewSantaDialog({open, santaInput, handleClose}: {open: boolean, santaInput?: Santa, handleClose: (id: number | null | undefined) => void}) {
     const [santaName, setSantaName] = useState<string>('')
@@ -36,19 +37,22 @@ function NewSantaDialog({open, santaInput, handleClose}: {open: boolean, santaIn
     return (
       <Dialog onClose={() => handleClose(null)} open={open}>
           <DialogTitle>Set backup account</DialogTitle>
-          <TextField id="name" label="Name" value={santaName} onChange={e => setSantaName(e.target.value)}/>
-          <TextField id="date" label="Date" value={santaDate} onChange={e => setSantaDate(e.target.value)}/>
-          <Button onClick={() => save()}>Save</Button>
+          <div className={styles.newSantaFields}>
+              <TextField id="name" label="Name" value={santaName} onChange={e => setSantaName(e.target.value)}/>
+              <TextField id="date" label="Date" value={santaDate} onChange={e => setSantaDate(e.target.value)}/>
+          </div>
+          <Button onClick={() => save()} disabled={!santaName || !santaDate}>Save</Button>
       </Dialog>
     );
 }
 
-function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSelectRun, onManage}:
+function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSelectRun, onManage, filters, onSetFilters, availableFilters}:
                     {
                         peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun,
                         onSelectSanta: (santa?: Santa) => void,
                         onSelectRun: (run?: SantaRun) => void,
-                        onManage: (santa: Santa, santaRun?: SantaRun) => void}
+                        onManage: (santa: Santa, santaRun?: SantaRun) => void,
+                        filters: PersonGroup[], onSetFilters: (filters: PersonGroup[]) => void, availableFilters: PersonGroup[]}
 ) {
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.send',
@@ -63,6 +67,8 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     const [openDgNewSanta, setOpenDgNewSanta] = useState(false);
     const [runPersonList, setRunPersonList] = useState<SantaRunPeople[]>([]);
     const [currentPersonList, setCurrentPersonList] = useState<Person[]>([]);
+
+    const [filteredPeopleList, setFilteredPeopleList] = useState<Person[]>([]);
 
     const [mailsToSend, setMailsToSend] = useState<SantaRunPeople[]>([]);
     const [santaToUpdate, setSantaToUpdate] = useState<Santa>();
@@ -103,14 +109,29 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     useEffect(() => {
         get('http://localhost:8080/person/santa').then(res => setSantaList(res));
-        if (!selectedSanta && !selectedRun) {
+        if (!selectedSanta) {
             get('http://localhost:8080/person/last-santa').then(res => updateSanta(res));
-        } else if (selectedSanta) {
+        }
+    }, []);
+
+    useEffect(() => {
+        if (selectedSanta) {
             get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res));
         }
+    }, [selectedSanta]);
+
+    useEffect(() => {
         setComputed(!!selectedRun && selectedRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
         updateRunPersonList(selectedRun?.peopleList || []);
     }, [selectedRun]);
+
+    useEffect(() => {
+        if (filters.length === 0) {
+            setFilteredPeopleList(peopleList);
+        } else {
+            setFilteredPeopleList(peopleList.filter(p => p.groups.some(g => filters.find(f => f.id === g.id))));
+        }
+    }, [peopleList, filters]);
 
     async function refresh() {
         const newSantaList: Santa[] = await get('http://localhost:8080/person/santa');
@@ -170,6 +191,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     function sendAllMails() {
         sendMail(runPersonList);
+        
     }
 
     async function sendMail(runPeoples: SantaRunPeople[]) {
@@ -248,7 +270,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
             <Toolbar>
                 <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                     Secret Santa
-                    {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.creationDate}]` : ''}
+                    {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.secretSantaDate}]` : ''}
                     {selectedRun ? ` - ${runPersonList.length} people` : ''}
                 </Typography>
                 <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null}>Manage</Button>
@@ -258,22 +280,30 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
         <div className={styles.mainPanel}>
             <div className={styles.subPanel}>
+                <div>
+                    <GroupFilter filters={filters} onSetFilters={onSetFilters} availableFilters={availableFilters}></GroupFilter>
+                </div>
                 <div className={styles.listNames}>
                     <div className={styles.addPerson}>
-                        <AddPerson peopleList={peopleList} addPerson={addPerson} notInList={runPersonList.map(p => p.idPeople)}></AddPerson>
+                        <AddPerson peopleList={filteredPeopleList} addPerson={addPerson}
+                                   notInList={runPersonList.map(p => p.idPeople)}></AddPerson>
                     </div>
                     {runPersonList ? <div>
                         {runPersonList.map((person: SantaRunPeople) =>
                           <div key={person.idPeople}>
-                              <Link santaRunPeopleList={runPersonList} person={person} peopleList={peopleList} removeFromTo={removeFromTo} addPersonFromTo={addPersonFromTo} addPeopleList={currentPersonList} sendSingleMail={sendSingleMail}></Link>
+                              <Link santaRunPeopleList={runPersonList} person={person} peopleList={peopleList}
+                                    removeFromTo={removeFromTo} addPersonFromTo={addPersonFromTo}
+                                    addPeopleList={currentPersonList} sendSingleMail={sendSingleMail}></Link>
                           </div>
                         )}
                     </div> : ''}
                 </div>
                 <div className={styles.actionBar}>
                     <Button onClick={compute} startIcon={<AutoFixHighIcon/>} variant='outlined'>Compute</Button>
-                    <Button onClick={reshuffle} disabled={!computed} startIcon={<ShuffleIcon/>} variant="outlined">Reshuffle</Button>
-                    <Button onClick={sendAllMails} disabled={!computed} startIcon={<SendIcon/>} variant="contained">Send Mail</Button>
+                    <Button onClick={reshuffle} disabled={!computed} startIcon={<ShuffleIcon/>}
+                            variant="outlined">Reshuffle</Button>
+                    <Button onClick={sendAllMails} disabled={!computed} startIcon={<SendIcon/>} variant="contained">Send
+                        Mail</Button>
                 </div>
             </div>
             <div className={styles.rightPanel}>

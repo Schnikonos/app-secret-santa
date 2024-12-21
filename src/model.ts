@@ -71,3 +71,4 @@ export interface MailReply {
   success: boolean;
   nbMail: number;
 }
+
