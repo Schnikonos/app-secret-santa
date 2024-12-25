@@ -1,0 +1,91 @@
+.flex {
+  display: flex;
+}
+
+.mailContent {
+  padding: 16px;
+  border: 1px solid lightgray;
+  border-radius: 4px;
+}
+
+.mailDisplay {
+  padding-top: 16px;
+}
+
+.mailTitleBlock {
+  padding-bottom: 16px;
+}
+
+.mailTitle {
+
+}
+
+.editField {
+  display: flex;
+  align-items: center;
+  & > * {
+    margin-right: 16px;
+  }
+}
+
+.mailInfo {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  & > * {
+    padding-right: 16px;
+  }
+}
+
+.flexSpaceBetween {
+  justify-content: space-between;
+}
+
+.editSubject {
+  width: 100% !important;
+  margin-right: 0;
+}
+
+.key {
+  font-style: italic;
+}
+
+.value {
+  font-weight: bold;
+}
+
+.emptyEmail {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  margin: 16px 20px;
+  background-color: #fff;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  color: grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  flex-direction: column;
+}
+
+.emptyEmail.dragging {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.browseButton {
+  padding: 10px 20px;
+  border: 1px solid lightgray;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.dragAndDrop {
+
+}
+
+.editMailContent {
+  width: calc(100% - 32px);
+  min-height: 50px;
+}

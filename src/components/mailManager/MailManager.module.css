@@ -1,0 +1,79 @@
+.content {
+  height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 300px auto 300px;
+}
+
+.backButton {
+  margin-right: 16px;
+}
+
+
+.listTitle {
+  padding-bottom: 8px;
+}
+
+.templateList {
+  padding: 8px 16px;
+  height: calc(100% - 16px);
+  overflow: hidden;
+}
+
+.templateListContent {
+  height: calc(100% - 63px);
+}
+
+.addTemplateButton {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.itemDefault {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding-left: 40px;
+}
+
+.item {
+  cursor: pointer;
+  background-color: white;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    filter: brightness(95%);
+  }
+}
+
+.selected {
+  background-color: #e8e8e8;
+}
+
+.flex {
+  display: flex;
+}
+
+.propertyList {
+  & > * {
+    cursor: pointer;
+    font-style: italic;
+    padding: 8px 16px;
+
+    &:hover {
+      background-color: #e7e7e7;
+    }
+  }
+}
+
+.templateName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.templateListItems {
+  height: calc(100% - 50px);
+  overflow-y: auto;
+}

@@ -12,17 +12,21 @@ import {
   Toolbar,
   Typography
 } from "@mui/material";
-import {Person, PersonGroup, Santa, SantaRun, SantaRunExclusion} from "../../model";
+import {ErrorMessage, Person, PersonGroup, Santa, SantaRun, SantaRunExclusion, SnackbarState} from "../../model";
 import React, {useEffect, useState} from "react";
 import {deleteCall, post} from "../../Utils";
 import PeopleItem from "./PeopleItem";
 import ExclusionManagement from "./ExclusionManagement";
-import GroupFilter from "../groupFilter/GroupFilter";
+import GroupFilter from "../common/GroupFilter";
 import AddIcon from "@mui/icons-material/Add";
+import ClearIcon from '@mui/icons-material/Clear';
 
-function PersonDialog({person, open, handleClose, availableGroups, onRefreshGroup}:
+function PersonDialog({person, open, handleClose, availableGroups, onRefreshGroup, onErrorDialog, onSnackbar}:
                       {person?: Person, open: boolean, handleClose: (person: Person | null | undefined) => void,
-                        availableGroups: PersonGroup[], onRefreshGroup: () => void}) {
+                        availableGroups: PersonGroup[], onRefreshGroup: () => void,
+                        onErrorDialog: (err: ErrorMessage) => void,
+                        onSnackbar: (msg: string, state: SnackbarState) => void,
+                      }) {
   const [id, setId] = useState<number>();
   const [name, setName] = useState<string>('');
   const [surname, setSurname] = useState<string>('');
@@ -47,8 +51,10 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
     try {
       await deleteCall(`http://localhost:8080/person/people/${person?.id}`);
       handleClose(person);
+      onSnackbar('Person deleted successfully', 'success');
     } catch (error) {
       handleClose(null);
+      onErrorDialog({message: 'Error while trying to delete the person', err: error});
     }
   }
 
@@ -61,9 +67,12 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
         person.email = savedPerson.email;
         person.groups = savedPerson.groups;
       }
+      onSnackbar('Person saved successfully', 'success');
       handleClose(savedPerson);
     } catch (error) {
       handleClose(null);
+      console.log(error);
+      onErrorDialog({message: 'Error saving person', err: error});
     }
   }
 
@@ -78,15 +87,19 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
     }
   }
 
-  function saveNewGroup() {
+  async function saveNewGroup() {
     if (!newGroupName || availableGroups.find(g => g.name === newGroupName)) {
       return;
     }
-    post(`http://localhost:8080/person/people-group`, {name: newGroupName}).then((res: PersonGroup) => {
+    setShowCreateNewGroup(false);
+    try {
+      const res: PersonGroup = await post(`http://localhost:8080/person/people-group`, {name: newGroupName});
+      onSnackbar('Group added successfully', 'success');
       onRefreshGroup();
       setGroups([...groups, res].sort((a, b) => a.name.localeCompare(b.name)));
-    });
-    setShowCreateNewGroup(false);
+    } catch (err) {
+      onErrorDialog({message: 'Error saving group', err: err});
+    }
   }
 
   const handleAddGroupClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -101,7 +114,12 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
 
   return (
     <Dialog onClose={() => handleClose(null)} open={open}>
-      <DialogTitle>{person ? 'Edit person' : 'Add new person'}</DialogTitle>
+      <DialogTitle>
+        <div className={styles.dialogTitle}>
+          <span>{person ? 'Edit person' : 'Add new person'}</span>
+          <IconButton title='Close' onClick={() => handleClose(null)}><ClearIcon/></IconButton>
+        </div>
+      </DialogTitle>
       <div className={styles.dialogContent}>
         <div className={styles.nameFields}>
           <TextField id="name" label="Name" value={name} onChange={e => setName(e.target.value)}/>
@@ -139,9 +157,11 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
   );
 }
 
-function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeopleList, filters, onSetFilters, availableFilters, onRefreshAvailableFilters}:
+function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeopleList, filters, onSetFilters, availableFilters, onRefreshAvailableFilters, onErrorDialog, onSnackbar}:
                   {peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun, onBack: (run: SantaRun) => void, onUpdatedPeopleList: (cbk: () => void) => void,
                     filters: PersonGroup[], onSetFilters: (filters: PersonGroup[]) => void,
+                    onErrorDialog: (err: ErrorMessage) => void,
+                    onSnackbar: (msg: string, state: SnackbarState) => void,
                   availableFilters: PersonGroup[], onRefreshAvailableFilters: () => void}) {
   const [openPersonDialog, setOpenPersonDialog] = useState<boolean>(false);
   const [selectedPerson, setSelectedPerson] = useState<Person>();
@@ -302,11 +322,10 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     <div>
       <AppBar position="static">
         <Toolbar>
-          <Button color="inherit" onClick={() => onBack(selectedRun)}>Back</Button>
+          <Button className={styles.backButton} color="inherit" onClick={save}>Back</Button>
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-            Manage {selectedSanta?.name} [{selectedSanta?.secretSantaDate}]
+            People for {selectedSanta?.name} [{selectedSanta?.secretSantaDate}]
           </Typography>
-          <Button color="inherit" onClick={save}>Save</Button>
         </Toolbar>
       </AppBar>
       <div className={styles.manageContent}>
@@ -336,7 +355,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
           </div>
         </div>
       </div>
-      <PersonDialog open={openPersonDialog} handleClose={handleCloseEditPerson} person={selectedPerson} availableGroups={availableFilters} onRefreshGroup={onRefreshAvailableFilters}></PersonDialog>
+      <PersonDialog open={openPersonDialog} handleClose={handleCloseEditPerson} person={selectedPerson} availableGroups={availableFilters} onRefreshGroup={onRefreshAvailableFilters} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}></PersonDialog>
     </div>
   );
 }

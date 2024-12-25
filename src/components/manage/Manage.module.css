@@ -77,6 +77,16 @@ h3 {
 
 }
 
+.dialogTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backButton {
+  margin-right: 16px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

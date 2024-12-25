@@ -1,0 +1,10 @@
+.actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.message {
+  font-style: italic;
+  padding: 16px 32px;
+}

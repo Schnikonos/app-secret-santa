@@ -2,56 +2,104 @@ import styles from './Overview.module.css';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import SendIcon from '@mui/icons-material/Send';
-import {AppBar, Button, Dialog, DialogTitle, TextField, Toolbar, Typography} from "@mui/material";
-import {ComputeReply, MailReply, Person, PersonGroup, Santa, SantaRun, SantaRunPeople} from "../../model";
+import {AppBar, Button, Dialog, DialogTitle, Menu, MenuItem, TextField, Toolbar, Typography} from "@mui/material";
+import {
+    ComputeReply,
+    ErrorMessage,
+    MailReply,
+    MailTemplate,
+    Person,
+    PersonGroup,
+    Santa,
+    SantaRun,
+    SantaRunPeople,
+    SnackbarState
+} from "../../model";
 import Link from "./Link";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {get, post} from "../../Utils";
 import RightPanel from "./RightPanel";
 import AddPerson from "./AddPerson";
 import {TokenResponse, useGoogleLogin} from "@react-oauth/google";
-import GroupFilter from "../groupFilter/GroupFilter";
+import GroupFilter from "../common/GroupFilter";
 
-function NewSantaDialog({open, santaInput, handleClose}: {open: boolean, santaInput?: Santa, handleClose: (id: number | null | undefined) => void}) {
+function NewSantaDialog({open, santaInput, handleClose, onErrorDialog, onSnackbar}:
+                        {open: boolean, santaInput?: Santa, handleClose: (id: number | null | undefined) => void,
+                            onErrorDialog: (err: ErrorMessage) => void,
+                            onSnackbar: (msg: string, state: SnackbarState) => void,
+                        }) {
     const [santaName, setSantaName] = useState<string>('')
     const [santaDate, setSantaDate] = useState<string>('')
+    const [santaTemplate, setSantaTemplate] = useState<MailTemplate>()
+    const [templates, setTemplates] = useState<MailTemplate[]>([]);
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const openMailTemplate = Boolean(anchorEl);
 
     useEffect(() => {
+        get(`http://localhost:8080/email/template`).then(res => setTemplates(res)).catch(err => onErrorDialog({message: 'Error getting the mail templates', err}));
         setSantaName(santaInput?.name || '');
         setSantaDate(santaInput?.secretSantaDate || '');
+        setSantaTemplate(santaInput?.mailTemplate);
     }, [santaInput]);
 
     async function save() {
         try {
-            const santa: Santa = await post(`http://localhost:8080/person/santa`, {id: santaInput?.id, name: santaName, secretSantaDate: santaDate});
+            const santa: Santa = await post(`http://localhost:8080/person/santa`, {id: santaInput?.id, name: santaName, secretSantaDate: santaDate, mailTemplate: santaTemplate});
+            onSnackbar('Successfully saved the Secret Santa !', 'success');
             if (santaInput) {
                 santaInput.name = santaName;
                 santaInput.secretSantaDate = santaDate;
+                santaInput.mailTemplate = santaTemplate;
             }
             handleClose(santa.id);
         } catch (error) {
             handleClose(null);
+            onErrorDialog({message: 'Issue while saving the secret santa', err: error});
         }
     }
 
+    const handleCloseMailTemplateMenu = (mailTemplate?: MailTemplate) => {
+        setAnchorEl(null);
+        setSantaTemplate(mailTemplate);
+    };
+
+    const handleOpenMailTemplateMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
     return (
       <Dialog onClose={() => handleClose(null)} open={open}>
-          <DialogTitle>Set backup account</DialogTitle>
+          <DialogTitle>Edit your Secret Santa</DialogTitle>
           <div className={styles.newSantaFields}>
               <TextField id="name" label="Name" value={santaName} onChange={e => setSantaName(e.target.value)}/>
               <TextField id="date" label="Date" value={santaDate} onChange={e => setSantaDate(e.target.value)}/>
           </div>
+          {templates && templates.length > 0 && (
+            <div className={styles.mailTemplates}>
+                <Button onClick={handleOpenMailTemplateMenu}><span className={styles.italic}>Mail Template:</span> <span className={styles.bold}>{santaTemplate ? santaTemplate.name : 'DEFAULT'}</span></Button>
+                <Menu anchorEl={anchorEl} open={openMailTemplate} onClose={() => handleCloseMailTemplateMenu(santaTemplate)}>
+                    <MenuItem onClick={() => handleCloseMailTemplateMenu(undefined)}>DEFAULT</MenuItem>
+                    {templates.map(template => (
+                      <MenuItem key={template.id} onClick={() => handleCloseMailTemplateMenu(template)}>{template.name} [{template.typeMail}]</MenuItem>
+                    ))}
+                </Menu>
+            </div>
+          )}
           <Button onClick={() => save()} disabled={!santaName || !santaDate}>Save</Button>
       </Dialog>
     );
 }
 
-function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSelectRun, onManage, filters, onSetFilters, availableFilters}:
+function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSelectRun, onManage, filters, onSetFilters, availableFilters, onManageMail, onConfirmModal, onErrorDialog, onSnackbar}:
                     {
                         peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun,
                         onSelectSanta: (santa?: Santa) => void,
                         onSelectRun: (run?: SantaRun) => void,
-                        onManage: (santa: Santa, santaRun?: SantaRun) => void,
+                        onConfirmModal: (msg: string, cbk: () => void) => void,
+                        onErrorDialog: (err: ErrorMessage) => void,
+                        onSnackbar: (msg: string, state: SnackbarState) => void,
+                        onManage: (santa: Santa, santaRun?: SantaRun) => void, onManageMail: () => void,
                         filters: PersonGroup[], onSetFilters: (filters: PersonGroup[]) => void, availableFilters: PersonGroup[]}
 ) {
     const login = useGoogleLogin({
@@ -75,48 +123,66 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     function handleOnLoginError(err: Pick<TokenResponse, "error" | "error_description" | "error_uri">) {
         console.log(err);
+        onErrorDialog({message: 'Issue while logging into google', err});
     }
 
     async function handleOnLoginSuccess(resp: Omit<TokenResponse, "error" | "error_description" | "error_uri">) {
         await post('http://localhost:8080/email/token', {token: resp.access_token});
-        executeSendMails(mailsToSend);
+        onSnackbar('Successfully logged into google', 'success');
+        await executeSendMails(mailsToSend);
     }
 
     async function executeSendMails(mails: SantaRunPeople[]) {
         const query: SantaRun = {id: selectedRun.id, peopleList: mails};
-        const reply: MailReply = await post(`http://localhost:8080/email/mail/${selectedSanta?.id}`, query);
+        try {
+            const reply: MailReply = await post(`http://localhost:8080/email/mail/${selectedSanta?.id}`, query);
+            if (reply.success) {
+                onSnackbar(`Successfully sent ${reply.nbMailSuccess} mails`, 'success');
+            } else {
+                onSnackbar(`Issue while sending mails: ${reply.nbMailError} fails / ${reply.nbMailSuccess} success`, 'warning');
+            }
+            const newRunPeople = runPersonList.map(r => ({...r, mailSent: r.mailSent || reply.idMailsSent.includes(r.idPeople)}));
+            setRunPersonList(newRunPeople);
+        } catch (error) {
+            onErrorDialog({message: 'Issue while sending the mails', err: error});
+        }
     }
 
     async function updateSanta(newSanta?: Santa) {
-        onSelectSanta(newSanta);
-        if (!newSanta) {
-            setSantaRunList([]);
-            onSelectRun({peopleList: []});
-            setComputed(false);
-            return;
+        try {
+            onSelectSanta(newSanta);
+            if (!newSanta) {
+                setSantaRunList([]);
+                onSelectRun({peopleList: []});
+                setComputed(false);
+                return;
+            }
+            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${newSanta.id}/run`);
+            setSantaRunList(newSantaRunList);
+
+            if (newSantaRunList.length === 0) {
+                onSelectRun({peopleList: []});
+                setComputed(false);
+                return;
+            }
+            const lastRun: SantaRun | undefined = await get(`http://localhost:8080/person/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
+            onSelectRun(lastRun);
+            setComputed(!!lastRun && lastRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
+        } catch (err) {
+            onErrorDialog({message: 'Issue while refreshing Secret Santa', err});
         }
-        const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${newSanta.id}/run`);
-        setSantaRunList(newSantaRunList);
-        if (newSantaRunList.length === 0) {
-            onSelectRun({peopleList: []});
-            setComputed(false);
-            return;
-        }
-        const lastRun: SantaRun | undefined = await get(`http://localhost:8080/person/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
-        onSelectRun(lastRun);
-        setComputed(!!lastRun && lastRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
     }
 
     useEffect(() => {
-        get('http://localhost:8080/person/santa').then(res => setSantaList(res));
+        get('http://localhost:8080/person/santa').then(res => setSantaList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of Secret Santa', err}));
         if (!selectedSanta) {
-            get('http://localhost:8080/person/last-santa').then(res => updateSanta(res));
+            get('http://localhost:8080/person/last-santa').then(res => updateSanta(res)).catch(err => onErrorDialog({message: 'Issue while getting the last Secret Santa', err}));
         }
     }, []);
 
     useEffect(() => {
         if (selectedSanta) {
-            get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res));
+            get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of runs', err}));
         }
     }, [selectedSanta]);
 
@@ -134,12 +200,16 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }, [peopleList, filters]);
 
     async function refresh() {
-        const newSantaList: Santa[] = await get('http://localhost:8080/person/santa');
-        setSantaList(newSantaList);
+        try {
+            const newSantaList: Santa[] = await get('http://localhost:8080/person/santa');
+            setSantaList(newSantaList);
 
-        if (selectedSanta) {
-            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`);
-            setSantaRunList(newSantaRunList);
+            if (selectedSanta) {
+                const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`);
+                setSantaRunList(newSantaRunList);
+            }
+        } catch (err) {
+            onErrorDialog({message: 'Issue while refreshing the data', err});
         }
     }
 
@@ -148,9 +218,13 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         if (id === null) {
             return;
         }
-        get('http://localhost:8080/person/santa').then(res => setSantaList(res));
-        const newSanta: Santa = await get(`http://localhost:8080/person/santa/${id}`);
-        await updateSanta(newSanta);
+        try {
+            get('http://localhost:8080/person/santa').then(res => setSantaList(res));
+            const newSanta: Santa = await get(`http://localhost:8080/person/santa/${id}`);
+            await updateSanta(newSanta);
+        } catch (err) {
+            onErrorDialog({message: 'Issue while refreshing the data', err});
+        }
     }
 
     function selectSanta(selectedSanta?: Santa) {
@@ -162,19 +236,32 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
             onSelectRun(undefined);
             return;
         }
-        const newSantaRun: SantaRun = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run/${selectedSantaRun.id}`);
-        onSelectRun(newSantaRun);
-        setComputed(!!newSantaRun && newSantaRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
+        try {
+            const newSantaRun: SantaRun = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run/${selectedSantaRun.id}`);
+            onSelectRun(newSantaRun);
+            setComputed(!!newSantaRun && newSantaRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
+        } catch (err) {
+            onErrorDialog({message: 'Issue while getting the run\'s data', err});
+        }
     }
 
     async function compute() {
-        selectedRun.peopleList = runPersonList.filter(p => !p.isRemoved);
-        const result: ComputeReply = await post(`http://localhost:8080/person/compute/${selectedSanta?.id}`, selectedRun);
-        if (result.ok) {
-            onSelectRun(result.santaRun);
-            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run`);
-            setSantaRunList(newSantaRunList);
-            setComputed(true);
+        try {
+            selectedRun.peopleList = runPersonList.filter(p => !p.isRemoved);
+            const result: ComputeReply = await post(`http://localhost:8080/person/compute/${selectedSanta?.id}`, selectedRun);
+            if (result.ok) {
+                onSelectRun(result.santaRun);
+                const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run`);
+                setSantaRunList(newSantaRunList);
+                setComputed(true);
+                const msg = `Computation successfull ! ${result.nbChanged > 0 ? `[Changed ${result.nbChanged} From/To]` : ''} ${result.allowSameFromTo ? '!! Warning !! Same FromTo for some' : ''}`;
+                const state = result.allowSameFromTo ? 'warning' : 'success';
+                onSnackbar(msg, state);
+            } else {
+                onSnackbar('Could not do the computation', 'warning');
+            }
+        } catch (err) {
+            onErrorDialog({message: 'Issue while doing the computation', err});
         }
     }
 
@@ -195,12 +282,16 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }
 
     async function sendMail(runPeoples: SantaRunPeople[]) {
-        const res = await get('http://localhost:8080/email/token');
-        if (!!res) {
-            await executeSendMails(runPeoples);
-        } else {
-            setMailsToSend(runPeoples)
-            login();
+        try {
+            const res = await get('http://localhost:8080/email/token');
+            if (!!res) {
+                await executeSendMails(runPeoples);
+            } else {
+                setMailsToSend(runPeoples)
+                login();
+            }
+        } catch (err) {
+            onErrorDialog({message: 'Issue while sending mails', err});
         }
     }
 
@@ -273,8 +364,9 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                     {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.secretSantaDate}]` : ''}
                     {selectedRun ? ` - ${runPersonList.length} people` : ''}
                 </Typography>
-                <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null}>Manage</Button>
-                <Button color="inherit" onClick={newSantaDialog}>New</Button>
+                <Button color="inherit" onClick={onManageMail} title='Manage the mail templates that can be used'>Mail</Button>
+                <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null} title='Add/Remove new people and define their blacklists'>People</Button>
+                <Button color="inherit" onClick={newSantaDialog} title='Create a new SecretSanta !'>New</Button>
             </Toolbar>
         </AppBar>
 
@@ -308,11 +400,11 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
             </div>
             <div className={styles.rightPanel}>
                 <RightPanel santaList={santaList ? santaList : []} santa={selectedSanta} santaRunList={santaRunList} onUpdateSanta={updateSantaItem}
-                            santaRun={selectedRun} onSelectSanta={selectSanta} onSelectRun={selectRun} onRefresh={refresh}></RightPanel>
+                            santaRun={selectedRun} onSelectSanta={selectSanta} onSelectRun={selectRun} onRefresh={refresh} onConfirmModal={onConfirmModal} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}></RightPanel>
             </div>
         </div>
 
-        <NewSantaDialog open={openDgNewSanta} santaInput={santaToUpdate} handleClose={(id) => newSanta(id)}></NewSantaDialog>
+        <NewSantaDialog open={openDgNewSanta} santaInput={santaToUpdate} handleClose={(id) => newSanta(id)} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}></NewSantaDialog>
     </>
 }
 

@@ -1,6 +1,6 @@
 import styles from "./RightPanel.module.css";
 import DeleteIcon from '@mui/icons-material/Delete';
-import {Santa, SantaRun} from "../../model";
+import {ErrorMessage, Santa, SantaRun, SnackbarState} from "../../model";
 import {deleteCall, formatDate} from "../../Utils";
 import {IconButton} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -36,10 +36,14 @@ function ListItem({name, creationDate, lastUpdate, onDelete, onUpdate}: {name: s
   );
 }
 
-function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, onSelectRun, onRefresh, onUpdateSanta}:
+function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, onSelectRun, onRefresh, onUpdateSanta, onConfirmModal, onErrorDialog, onSnackbar}:
                       {
                         santaList: Santa[], santa?: Santa, santaRunList: SantaRun[], santaRun?: SantaRun,
-                        onSelectSanta: (santa?: Santa) => void, onSelectRun: (santaRun?: SantaRun) => void, onRefresh: () => void, onUpdateSanta: (santa?: Santa) => void}) {
+                        onConfirmModal: (msg: string, cbk: () => void) => void,
+                        onSelectSanta: (santa?: Santa) => void, onSelectRun: (santaRun?: SantaRun) => void, onRefresh: () => void, onUpdateSanta: (santa?: Santa) => void,
+                        onErrorDialog: (err: ErrorMessage) => void,
+                        onSnackbar: (msg: string, state: SnackbarState) => void,
+                      }) {
   function selectSanta(selectedSanta: Santa) {
     if (selectedSanta.id !== santa?.id) {
       onSelectSanta(selectedSanta);
@@ -52,20 +56,34 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
     }
   }
 
+  function confirmDeleteSanta(santa: Santa) {
+    onConfirmModal(`Are you sure you want to delete the Secret Santa [${santa?.name}] [${santa?.secretSantaDate}]`, () => deleteSanta(santa));
+  }
+
   async function deleteSanta(selectedSanta: Santa) {
-    await deleteCall(`http://localhost:8080/person/santa/${selectedSanta.id}`);
-    if (selectedSanta.id === santa?.id) {
-      onSelectSanta(undefined);
+    try {
+      await deleteCall(`http://localhost:8080/person/santa/${selectedSanta.id}`);
+      onSnackbar('Secret Santa successfully deleted', 'success');
+      if (selectedSanta.id === santa?.id) {
+        onSelectSanta(undefined);
+      }
+      onRefresh();
+    } catch (err) {
+      onErrorDialog({message: 'Issue while deleting the Secret Santa', err});
     }
-    onRefresh();
   }
 
   async function deleteRun(selectedSantaRun: SantaRun) {
-    await deleteCall(`http://localhost:8080/person/santa/${santa?.id}/run/${selectedSantaRun.id}`);
-    if (selectedSantaRun.id === santaRun?.id) {
-      onSelectRun(undefined);
+    try {
+      await deleteCall(`http://localhost:8080/person/santa/${santa?.id}/run/${selectedSantaRun.id}`);
+      onSnackbar('Run successfully deleted', 'success');
+      if (selectedSantaRun.id === santaRun?.id) {
+        onSelectRun(undefined);
+      }
+      onRefresh();
+    } catch (err) {
+      onErrorDialog({message: 'Issue while deleting the Run', err});
     }
-    onRefresh();
   }
 
   return (
@@ -75,7 +93,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
         <div className={styles.list}>
           {santaList.map(value =>
             <div key={value.id} className={`${styles.item} ${value.id === santa?.id && styles.selected}`} onClick={() => selectSanta(value)} title={`[${value.secretSantaDate}] - ${value.name}`}>
-              <ListItem name={value.name} creationDate={value.creationDate} lastUpdate={value.lastUpdate} onDelete={() => deleteSanta(value)} onUpdate={() => onUpdateSanta(value)}></ListItem>
+              <ListItem name={value.name} creationDate={value.creationDate} lastUpdate={value.lastUpdate} onDelete={() => confirmDeleteSanta(value)} onUpdate={() => onUpdateSanta(value)}></ListItem>
             </div>
           )}
         </div>

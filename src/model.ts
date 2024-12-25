@@ -1,4 +1,12 @@
 
+export type SnackbarState = 'success' | 'info' | 'warning' | 'error';
+
+export interface ErrorMessage {
+  message: string;
+  details?: string;
+  err?: any;
+}
+
 export interface Person {
   id: number;
   name: string;
@@ -46,6 +54,7 @@ export interface Santa {
   secretSantaDate?: string;
   creationDate?: string;
   lastUpdate?: string;
+  mailTemplate?: MailTemplate;
 
   runs: SantaRun[];
 }
@@ -60,15 +69,20 @@ export interface ComputeReply {
 export type MailType = 'text' | 'html' | 'eml';
 
 export interface MailTemplate {
-  id: number;
-  name: string;
-  title: string;
-  template: string
+  id?: number;
+  name?: string;
+  title?: string;
   typeMail: MailType;
+  isDefault?: boolean;
+
+  template?: string;
+  emlFormattedContent?: string;
 }
 
 export interface MailReply {
   success: boolean;
-  nbMail: number;
+  nbMailSuccess: number;
+  nbMailError: number;
+  idMailsSent: number[];
 }
 

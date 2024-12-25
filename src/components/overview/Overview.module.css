@@ -31,7 +31,7 @@
 }
 
 .listNames {
-  height: calc(100% - 53px);
+  height: calc(100% - 113px);
   overflow-y: auto;
 }
 
@@ -40,4 +40,17 @@
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+.mailTemplates {
+  margin: 16px;
+}
+
+.italic {
+  font-style: italic;
+  padding-right: 16px;
+}
+
+.bold {
+  font-weight: bold;
 }

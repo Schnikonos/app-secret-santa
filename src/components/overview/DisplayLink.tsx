@@ -37,7 +37,7 @@ function DisplaySetPerson(peopleList: Person[], notInList: number[], addPerson: 
 function DisplayLink({person, remove, peopleList, notInList, addPerson, isLocked, onToggleLock}:
                      { person?: Person, remove: (e: React.MouseEvent<HTMLButtonElement>) => void,
                        peopleList: Person[], notInList: number[], addPerson: (p: Person) => void, isLocked?: boolean, onToggleLock?: () => void}) {
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(true);
 
   function onToggleLockInternal(event: React.MouseEvent<HTMLButtonElement>) {
     event.stopPropagation();
