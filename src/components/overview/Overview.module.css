@@ -6,6 +6,10 @@
   overflow: hidden;
 }
 
+.toolbarButton {
+  margin-left: 16px;
+}
+
 .subPanel {
   height: calc(100vh - 64px);
 }

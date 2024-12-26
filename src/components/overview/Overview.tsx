@@ -174,7 +174,12 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }
 
     useEffect(() => {
-        get('/person/santa').then(res => setSantaList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of Secret Santa', err}));
+        get('/person/santa').then(res => {
+            setSantaList(res);
+            if (res.length === 0) {
+                newSantaDialog();
+            }
+        }).catch(err => onErrorDialog({message: 'Issue while getting the list of Secret Santa', err}));
         if (!selectedSanta) {
             get('/person/last-santa').then(res => updateSanta(res)).catch(err => onErrorDialog({message: 'Issue while getting the last Secret Santa', err}));
         }
@@ -364,9 +369,9 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                     {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.secretSantaDate}]` : ''}
                     {selectedRun ? ` - ${runPersonList.length} people` : ''}
                 </Typography>
-                <Button color="inherit" onClick={onManageMail} title='Manage the mail templates that can be used'>Mail</Button>
-                <Button disabled={!selectedSanta} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null} title='Add/Remove new people and define their blacklists'>People</Button>
-                <Button color="inherit" onClick={newSantaDialog} title='Create a new SecretSanta !'>New</Button>
+                <Button color="inherit" className={styles.toolbarButton} onClick={onManageMail} title='Manage the mail templates that can be used'>Mail</Button>
+                <Button disabled={!selectedSanta} className={styles.toolbarButton} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null} title='Add/Remove new people and define their blacklists'>People</Button>
+                <Button color="inherit" className={styles.toolbarButton} onClick={newSantaDialog} title='Create a new SecretSanta !'>New</Button>
             </Toolbar>
         </AppBar>
 
