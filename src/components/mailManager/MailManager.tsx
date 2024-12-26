@@ -16,8 +16,8 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
   const [defaultTemplate, setDefaultTemplate] = useState<MailTemplate>();
 
   useEffect(() => {
-    get(`http://localhost:8080/email/template`).then(res => setTemplates(res)).catch(err => onErrorDialog({message: `Failed to get template`, err}));
-    get('http://localhost:8080/email/template/default').then((res: MailTemplate) => {
+    get(`/email/template`).then(res => setTemplates(res)).catch(err => onErrorDialog({message: `Failed to get template`, err}));
+    get('/email/template/default').then((res: MailTemplate) => {
       res.isDefault = true;
       setDefaultTemplate(res);
     }).catch(err => onErrorDialog({message: `Failed to get default template`, err}));
@@ -28,7 +28,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
       return;
     }
     if (!template.template) {
-      const fullTemplate = await get(`http://localhost:8080/email/template/${template.id}`);
+      const fullTemplate = await get(`/email/template/${template.id}`);
       template.template = fullTemplate.template;
       template.emlFormattedContent = fullTemplate.emlFormattedContent;
     }
@@ -41,23 +41,21 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
 
   async function saveTemplate(template: MailTemplate) {
     try {
-      const newTemplate = await post(`http://localhost:8080/email/template`, template);
+      const newTemplate = await post(`/email/template`, template);
       setCurrentTemplate(newTemplate);
       onSnackbar('Mail template saved', 'success');
 
       await refreshTemplates();
     } catch (err) {
-      console.log(err);
       onErrorDialog({message: 'Error while saving the template', err});
     }
   }
 
   async function refreshTemplates() {
     try {
-      const newTemplateList = await get('http://localhost:8080/email/template');
+      const newTemplateList = await get('/email/template');
       setTemplates(newTemplateList);
     } catch (err) {
-      console.log(err);
       onErrorDialog({message: 'Error while refreshing the templates list', err});
     }
   }
@@ -66,7 +64,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
     if (currentTemplate?.id === template.id) {
       setCurrentTemplate(undefined);
     }
-    await deleteCall(`http://localhost:8080/email/template/${template.id}`);
+    await deleteCall(`/email/template/${template.id}`);
     await refreshTemplates();
   }
 

@@ -125,7 +125,7 @@ function MailContentEdit({mailTemplate, onSave, onCancel, onErrorDialog, onSnack
   const handleUpload = async (mailContent: string) => {
     try {
       const mailTemplate: MailTemplate = {typeMail: 'eml', template: mailContent};
-      const res: MailTemplate = await post(`http://localhost:8080/email/template/preview`, mailTemplate);
+      const res: MailTemplate = await post(`/email/template/preview`, mailTemplate);
       setMailFormattedContent(res.emlFormattedContent || '');
       setMailContent(mailContent)
       onSnackbar('Mail preview displayed', 'info');

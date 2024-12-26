@@ -39,11 +39,11 @@ function App() {
   }, []);
 
   function refreshAvailableFilters() {
-    get(`http://localhost:8080/person/people-group`).then((res: PersonGroup[]) => setAvailableFilters(res)).catch(err => onErrorDialog({message: 'Error while getting the groups', err}));
+    get(`/person/people-group`).then((res: PersonGroup[]) => setAvailableFilters(res)).catch(err => onErrorDialog({message: 'Error while getting the groups', err}));
   }
 
   function refreshPeopleList(cbk: () => void) {
-    get("http://localhost:8080/person/people").then(res => {
+    get("/person/people").then(res => {
       setPeopleList(res);
       cbk();
     }).catch(err => onErrorDialog({message: 'Error while getting people', err}));

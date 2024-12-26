@@ -1,10 +1,42 @@
 .actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 8px 16px;
 }
 
 .message {
   font-style: italic;
   padding: 16px 32px;
+}
+
+.errorTitle {
+  color: red;
+  display: flex;
+  align-items: center;
+  padding-left: 0;
+}
+
+.errorDetails {
+  padding: 16px 32px;
+  margin: 8px 32px;
+  background-color: #efefef;
+  overflow: auto;
+}
+
+.errorTitleIcon {
+  background-color: #fddede;
+  height: 50px;
+  width: 50px;
+  margin-right: 16px;
+  padding: 5px;
+
+  & > * {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+.errorTitleText {
+  font-weight: bold;
+  font-size: xx-large;
 }

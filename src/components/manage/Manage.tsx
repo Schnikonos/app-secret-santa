@@ -49,7 +49,7 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
 
   async function deletePerson() {
     try {
-      await deleteCall(`http://localhost:8080/person/people/${person?.id}`);
+      await deleteCall(`/person/people/${person?.id}`);
       handleClose(person);
       onSnackbar('Person deleted successfully', 'success');
     } catch (error) {
@@ -60,7 +60,7 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
 
   async function save() {
     try {
-      const savedPerson: Person = await post(`http://localhost:8080/person/people`, {id, name, surname, email, groups});
+      const savedPerson: Person = await post(`/person/people`, {id, name, surname, email, groups});
       if (person) {
         person.name = savedPerson.name;
         person.surname = savedPerson.surname;
@@ -71,7 +71,6 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
       handleClose(savedPerson);
     } catch (error) {
       handleClose(null);
-      console.log(error);
       onErrorDialog({message: 'Error saving person', err: error});
     }
   }
@@ -93,7 +92,7 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
     }
     setShowCreateNewGroup(false);
     try {
-      const res: PersonGroup = await post(`http://localhost:8080/person/people-group`, {name: newGroupName});
+      const res: PersonGroup = await post(`/person/people-group`, {name: newGroupName});
       onSnackbar('Group added successfully', 'success');
       onRefreshGroup();
       setGroups([...groups, res].sort((a, b) => a.name.localeCompare(b.name)));
@@ -291,7 +290,6 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
         });
       }
     });
-    console.log(selectedRun);
     onBack(selectedRun);
   }
 

@@ -37,7 +37,7 @@ function NewSantaDialog({open, santaInput, handleClose, onErrorDialog, onSnackba
     const openMailTemplate = Boolean(anchorEl);
 
     useEffect(() => {
-        get(`http://localhost:8080/email/template`).then(res => setTemplates(res)).catch(err => onErrorDialog({message: 'Error getting the mail templates', err}));
+        get(`/email/template`).then(res => setTemplates(res)).catch(err => onErrorDialog({message: 'Error getting the mail templates', err}));
         setSantaName(santaInput?.name || '');
         setSantaDate(santaInput?.secretSantaDate || '');
         setSantaTemplate(santaInput?.mailTemplate);
@@ -45,7 +45,7 @@ function NewSantaDialog({open, santaInput, handleClose, onErrorDialog, onSnackba
 
     async function save() {
         try {
-            const santa: Santa = await post(`http://localhost:8080/person/santa`, {id: santaInput?.id, name: santaName, secretSantaDate: santaDate, mailTemplate: santaTemplate});
+            const santa: Santa = await post(`/person/santa`, {id: santaInput?.id, name: santaName, secretSantaDate: santaDate, mailTemplate: santaTemplate});
             onSnackbar('Successfully saved the Secret Santa !', 'success');
             if (santaInput) {
                 santaInput.name = santaName;
@@ -127,7 +127,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }
 
     async function handleOnLoginSuccess(resp: Omit<TokenResponse, "error" | "error_description" | "error_uri">) {
-        await post('http://localhost:8080/email/token', {token: resp.access_token});
+        await post('/email/token', {token: resp.access_token});
         onSnackbar('Successfully logged into google', 'success');
         await executeSendMails(mailsToSend);
     }
@@ -135,7 +135,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     async function executeSendMails(mails: SantaRunPeople[]) {
         const query: SantaRun = {id: selectedRun.id, peopleList: mails};
         try {
-            const reply: MailReply = await post(`http://localhost:8080/email/mail/${selectedSanta?.id}`, query);
+            const reply: MailReply = await post(`/email/mail/${selectedSanta?.id}`, query);
             if (reply.success) {
                 onSnackbar(`Successfully sent ${reply.nbMailSuccess} mails`, 'success');
             } else {
@@ -157,7 +157,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 setComputed(false);
                 return;
             }
-            const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${newSanta.id}/run`);
+            const newSantaRunList: SantaRun[] = await get(`/person/santa/${newSanta.id}/run`);
             setSantaRunList(newSantaRunList);
 
             if (newSantaRunList.length === 0) {
@@ -165,7 +165,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 setComputed(false);
                 return;
             }
-            const lastRun: SantaRun | undefined = await get(`http://localhost:8080/person/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
+            const lastRun: SantaRun | undefined = await get(`/person/santa/${newSanta.id}/run/${newSantaRunList[0].id}`);
             onSelectRun(lastRun);
             setComputed(!!lastRun && lastRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
         } catch (err) {
@@ -174,15 +174,15 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }
 
     useEffect(() => {
-        get('http://localhost:8080/person/santa').then(res => setSantaList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of Secret Santa', err}));
+        get('/person/santa').then(res => setSantaList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of Secret Santa', err}));
         if (!selectedSanta) {
-            get('http://localhost:8080/person/last-santa').then(res => updateSanta(res)).catch(err => onErrorDialog({message: 'Issue while getting the last Secret Santa', err}));
+            get('/person/last-santa').then(res => updateSanta(res)).catch(err => onErrorDialog({message: 'Issue while getting the last Secret Santa', err}));
         }
     }, []);
 
     useEffect(() => {
         if (selectedSanta) {
-            get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of runs', err}));
+            get(`/person/santa/${selectedSanta.id}/run`).then(res => setSantaRunList(res)).catch(err => onErrorDialog({message: 'Issue while getting the list of runs', err}));
         }
     }, [selectedSanta]);
 
@@ -201,11 +201,11 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     async function refresh() {
         try {
-            const newSantaList: Santa[] = await get('http://localhost:8080/person/santa');
+            const newSantaList: Santa[] = await get('/person/santa');
             setSantaList(newSantaList);
 
             if (selectedSanta) {
-                const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta.id}/run`);
+                const newSantaRunList: SantaRun[] = await get(`/person/santa/${selectedSanta.id}/run`);
                 setSantaRunList(newSantaRunList);
             }
         } catch (err) {
@@ -219,8 +219,8 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
             return;
         }
         try {
-            get('http://localhost:8080/person/santa').then(res => setSantaList(res));
-            const newSanta: Santa = await get(`http://localhost:8080/person/santa/${id}`);
+            get('/person/santa').then(res => setSantaList(res));
+            const newSanta: Santa = await get(`/person/santa/${id}`);
             await updateSanta(newSanta);
         } catch (err) {
             onErrorDialog({message: 'Issue while refreshing the data', err});
@@ -237,7 +237,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
             return;
         }
         try {
-            const newSantaRun: SantaRun = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run/${selectedSantaRun.id}`);
+            const newSantaRun: SantaRun = await get(`/person/santa/${selectedSanta?.id}/run/${selectedSantaRun.id}`);
             onSelectRun(newSantaRun);
             setComputed(!!newSantaRun && newSantaRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
         } catch (err) {
@@ -248,10 +248,10 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     async function compute() {
         try {
             selectedRun.peopleList = runPersonList.filter(p => !p.isRemoved);
-            const result: ComputeReply = await post(`http://localhost:8080/person/compute/${selectedSanta?.id}`, selectedRun);
+            const result: ComputeReply = await post(`/person/compute/${selectedSanta?.id}`, selectedRun);
             if (result.ok) {
                 onSelectRun(result.santaRun);
-                const newSantaRunList: SantaRun[] = await get(`http://localhost:8080/person/santa/${selectedSanta?.id}/run`);
+                const newSantaRunList: SantaRun[] = await get(`/person/santa/${selectedSanta?.id}/run`);
                 setSantaRunList(newSantaRunList);
                 setComputed(true);
                 const msg = `Computation successfull ! ${result.nbChanged > 0 ? `[Changed ${result.nbChanged} From/To]` : ''} ${result.allowSameFromTo ? '!! Warning !! Same FromTo for some' : ''}`;
@@ -283,7 +283,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     async function sendMail(runPeoples: SantaRunPeople[]) {
         try {
-            const res = await get('http://localhost:8080/email/token');
+            const res = await get('/email/token');
             if (!!res) {
                 await executeSendMails(runPeoples);
             } else {

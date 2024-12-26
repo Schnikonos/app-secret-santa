@@ -1,4 +1,6 @@
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
 export async function call(call: Promise<Response>) {
   const resp = await call;
   if (!resp.ok) {
@@ -12,23 +14,23 @@ export async function call(call: Promise<Response>) {
 }
 
 export async function get(url: string): Promise<any> {
-  return call(fetch(url));
+  return call(fetch(API_BASE_URL + url));
 }
 
 export async function post(url: string, body: any): Promise<any> {
-  return call(fetch(url, {method: "POST", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
+  return call(fetch(API_BASE_URL + url, {method: "POST", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
 }
 
 export async function put(url: string, body: any): Promise<any> {
-  return call(fetch(url, {method: "PUT", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
+  return call(fetch(API_BASE_URL + url, {method: "PUT", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
 }
 
 export async function patch(url: string, body: any): Promise<any> {
-  return call(fetch(url, {method: "PATCH", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
+  return call(fetch(API_BASE_URL + url, {method: "PATCH", body: body ? JSON.stringify(body) : null, headers: {"Content-Type": "application/json"}}));
 }
 
 export async function deleteCall(url: string): Promise<any> {
-  return call(fetch(url, {method: "DELETE"}));
+  return call(fetch(API_BASE_URL + url, {method: "DELETE"}));
 }
 
 export function formatDate(date?: string): string {

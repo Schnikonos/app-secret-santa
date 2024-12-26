@@ -62,7 +62,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
 
   async function deleteSanta(selectedSanta: Santa) {
     try {
-      await deleteCall(`http://localhost:8080/person/santa/${selectedSanta.id}`);
+      await deleteCall(`/person/santa/${selectedSanta.id}`);
       onSnackbar('Secret Santa successfully deleted', 'success');
       if (selectedSanta.id === santa?.id) {
         onSelectSanta(undefined);
@@ -75,7 +75,7 @@ function RightPanel({santaList, santa, santaRunList, santaRun, onSelectSanta, on
 
   async function deleteRun(selectedSantaRun: SantaRun) {
     try {
-      await deleteCall(`http://localhost:8080/person/santa/${santa?.id}/run/${selectedSantaRun.id}`);
+      await deleteCall(`/person/santa/${santa?.id}/run/${selectedSantaRun.id}`);
       onSnackbar('Run successfully deleted', 'success');
       if (selectedSantaRun.id === santaRun?.id) {
         onSelectRun(undefined);
