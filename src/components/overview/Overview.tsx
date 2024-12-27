@@ -383,7 +383,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 <div className={styles.listNames}>
                     <div className={styles.addPerson}>
                         <AddPerson peopleList={filteredPeopleList} addPerson={addPerson}
-                                   notInList={runPersonList.map(p => p.idPeople)}></AddPerson>
+                                   notInList={runPersonList.map(p => p.idPeople)} onEmptyList={() => selectedSanta && onManage(selectedSanta, selectedRun)}></AddPerson>
                     </div>
                     {runPersonList ? <div>
                         {runPersonList.map((person: SantaRunPeople) =>

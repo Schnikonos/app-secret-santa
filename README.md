@@ -1,6 +1,9 @@
-# Getting Started with Create React App
+# Secret Santa Frontend
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Description
+UI for the Secret Santa application, allowing you to manage your secret santas
 
 ## Available Scripts
 
