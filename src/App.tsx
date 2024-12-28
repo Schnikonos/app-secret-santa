@@ -42,10 +42,10 @@ function App() {
     get(`/person/people-group`).then((res: PersonGroup[]) => setAvailableFilters(res)).catch(err => onErrorDialog({message: 'Error while getting the groups', err}));
   }
 
-  function refreshPeopleList(cbk: () => void) {
+  function refreshPeopleList(cbk: (persons: Person[]) => void) {
     get("/person/people").then(res => {
       setPeopleList(res);
-      cbk();
+      cbk(res);
     }).catch(err => onErrorDialog({message: 'Error while getting people', err}));
   }
 

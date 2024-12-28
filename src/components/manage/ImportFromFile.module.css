@@ -1,0 +1,93 @@
+.title {
+
+}
+
+.label {
+
+}
+
+.importFile {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  height: 200px;
+  margin: 16px 0 0 0;
+  background-color: #fff;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  color: grey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  flex-direction: column;
+}
+
+.importFile.dragging {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
+.importFileButton {
+  padding: 10px 20px;
+  border: 1px solid lightgray;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.personInfo {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.content {
+  padding: 16px 32px;
+  display: grid;
+  grid-template-columns: 350px 250px;
+}
+
+.importContent {
+  padding-right: 8px;
+  border-right: 1px solid lightgrey;
+  margin: 8px 8px 8px 0;
+}
+
+.personListTitle {
+  font-style: italic;
+  padding-bottom: 8px;
+}
+
+.personListContent {
+  padding-left: 8px;
+}
+
+.name {
+  font-weight: bold;
+  padding-right: 8px;
+}
+
+.surname {
+  font-style: italic;
+  padding-right: 8px;
+}
+
+
+
+.description {
+  display: flex;
+}
+
+.label {
+  font-style: italic;
+  padding-right: 8px;
+}
+
+.value {
+  font-weight: bold;
+}
+
+.actions {
+  padding: 8px 32px;
+  display: flex;
+  justify-content: space-between;
+}

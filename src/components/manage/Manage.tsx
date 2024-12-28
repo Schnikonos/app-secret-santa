@@ -12,7 +12,16 @@ import {
   Toolbar,
   Typography
 } from "@mui/material";
-import {ErrorMessage, Person, PersonGroup, Santa, SantaRun, SantaRunExclusion, SnackbarState} from "../../model";
+import {
+  ErrorMessage,
+  ImportPersonReply,
+  Person,
+  PersonGroup,
+  Santa,
+  SantaRun,
+  SantaRunExclusion,
+  SnackbarState
+} from "../../model";
 import React, {useEffect, useState} from "react";
 import {deleteCall, post} from "../../Utils";
 import PeopleItem from "./PeopleItem";
@@ -20,6 +29,7 @@ import ExclusionManagement from "./ExclusionManagement";
 import GroupFilter from "../common/GroupFilter";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from '@mui/icons-material/Clear';
+import ImportFromFile from "./ImportFromFile";
 
 function PersonDialog({person, open, handleClose, availableGroups, onRefreshGroup, onErrorDialog, onSnackbar}:
                       {person?: Person, open: boolean, handleClose: (person: Person | null | undefined) => void,
@@ -32,6 +42,7 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
   const [surname, setSurname] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [groups, setGroups] = useState<PersonGroup[]>([]);
+  const [openImportDialog, setOpenImportDialog] = useState(false);
 
   const [newGroupName, setNewGroupName] = useState<string>();
   const [showCreateNewGroup, setShowCreateNewGroup] = useState<boolean>(false);
@@ -157,12 +168,13 @@ function PersonDialog({person, open, handleClose, availableGroups, onRefreshGrou
 }
 
 function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeopleList, filters, onSetFilters, availableFilters, onRefreshAvailableFilters, onErrorDialog, onSnackbar}:
-                  {peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun, onBack: (run: SantaRun) => void, onUpdatedPeopleList: (cbk: () => void) => void,
+                  {peopleList: Person[], selectedSanta?: Santa, selectedRun: SantaRun, onBack: (run: SantaRun) => void, onUpdatedPeopleList: (cbk: (persons: Person[]) => void) => void,
                     filters: PersonGroup[], onSetFilters: (filters: PersonGroup[]) => void,
                     onErrorDialog: (err: ErrorMessage) => void,
                     onSnackbar: (msg: string, state: SnackbarState) => void,
                   availableFilters: PersonGroup[], onRefreshAvailableFilters: () => void}) {
   const [openPersonDialog, setOpenPersonDialog] = useState<boolean>(false);
+  const [openImportDialog, setOpenImportDialog] = useState<boolean>(false);
   const [selectedPerson, setSelectedPerson] = useState<Person>();
   const [activePeopleList, setActivePeopleList] = useState<Person[]>([]);
   const [filteredPeopleList, setFilteredPeopleList] = useState<Person[]>([]);
@@ -316,6 +328,32 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     });
   }
 
+  function onExport() {
+    const list = filteredPeopleList.sort((a, b) => a.name.localeCompare(b.name));
+    const res = list.map(p => `${p.name},${p.surname},${p.email},${p.groups.map(g => g.name).join(';')}`);
+
+    const element = document.createElement("a");
+    const file = new Blob([res.join('\n')], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = "secretSantaList.csv";
+    document.body.appendChild(element); // Required for this to work in FireFox
+    element.click();
+  }
+
+  function onClickImport() {
+    setOpenImportDialog(true);
+  }
+
+  function onCloseImport(persons?: Person[], res?: ImportPersonReply) {
+    setOpenImportDialog(false);
+    if (!persons || !res) {
+      return;
+    }
+
+    onUpdatedPeopleList(() => {});
+    onRefreshAvailableFilters();
+  }
+
   return (
     <div>
       <AppBar position="static">
@@ -324,6 +362,10 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
             People for {selectedSanta?.name} [{selectedSanta?.secretSantaDate}]
           </Typography>
+          <div>
+            <Button className={styles.actionButton} color="inherit" onClick={onClickImport}>Import</Button>
+            <Button className={styles.actionButton} color="inherit" onClick={onExport}>Export</Button>
+          </div>
         </Toolbar>
       </AppBar>
       <div className={styles.manageContent}>
@@ -354,6 +396,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
         </div>
       </div>
       <PersonDialog open={openPersonDialog} handleClose={handleCloseEditPerson} person={selectedPerson} availableGroups={availableFilters} onRefreshGroup={onRefreshAvailableFilters} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}></PersonDialog>
+      <ImportFromFile open={openImportDialog} onClose={onCloseImport} onErrorDialog={onErrorDialog} onSnackbar={onSnackbar}></ImportFromFile>
     </div>
   );
 }

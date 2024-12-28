@@ -20,6 +20,11 @@ export interface Person {
   noRelationTo: Person[];
 }
 
+export interface ImportPersonReply {
+  idMap: {[id: number]: number};
+  newPersons: number[];
+}
+
 export interface PersonGroup {
   id?: number;
   name: string;
