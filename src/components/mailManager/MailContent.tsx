@@ -1,10 +1,26 @@
 import styles from './MailContent.module.css'
+import DownloadIcon from '@mui/icons-material/Download';
+import EditIcon from '@mui/icons-material/Edit';
 import {ErrorMessage, MailTemplate, MailType, SnackbarState} from "../../model";
 import React, {useEffect, useState} from "react";
 import {Button, TextField, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {post} from "../../Utils";
 
 function MailContentDisplay({mailTemplate, onEdit}: {mailTemplate: MailTemplate, onEdit: () => void}) {
+  function downloadMail() {
+    if (!mailTemplate.template) {
+      return;
+    }
+
+    const fileType = mailTemplate.typeMail === 'eml' ? 'eml' : mailTemplate.typeMail === 'html' ? 'html' : 'txt';
+    const element = document.createElement("a");
+    const file = new Blob([mailTemplate.template], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${mailTemplate.name}.${fileType}`;
+    document.body.appendChild(element); // Required for this to work in FireFox
+    element.click();
+  }
+
   return (
     <div className={styles.mailDisplay}>
       <div className={styles.mailTitleBlock}>
@@ -15,7 +31,8 @@ function MailContentDisplay({mailTemplate, onEdit}: {mailTemplate: MailTemplate,
             <ToggleButton value="eml" title='Gmail saved as file'>Eml</ToggleButton>
           </ToggleButtonGroup>
           <div><span className={styles.key}>Name:</span> <span className={styles.value}>{mailTemplate.name}</span></div>
-          {!mailTemplate.isDefault && <Button onClick={onEdit} variant='outlined'>Edit</Button>}
+          {!mailTemplate.isDefault && <Button onClick={onEdit} variant='outlined' startIcon={<EditIcon/>}>Edit</Button>}
+          <Button className={styles.mailDownload} onClick={downloadMail} variant='outlined' startIcon={<DownloadIcon/>}>Download</Button>
         </div>
         <div className={styles.mailTitle}><span className={styles.key}>Subject:</span> <span className={styles.value}>{mailTemplate.title}</span></div>
       </div>
@@ -153,7 +170,7 @@ function MailContentEdit({mailTemplate, onSave, onCancel, onErrorDialog, onSnack
               <ToggleButton value="html" title='HTML format'>Html</ToggleButton>
               <ToggleButton value="eml" title='Gmail saved as file'>Eml</ToggleButton>
             </ToggleButtonGroup>
-            <div className={`${styles.editField}`}><span className={styles.key}>Names:</span> <TextField value={mailName} onChange={e => setMailName(e.target.value)}></TextField></div>
+            <div className={`${styles.editField}`}><span className={styles.key}>Name:</span> <TextField value={mailName} onChange={e => setMailName(e.target.value)}></TextField></div>
             <Button onClick={saveTemplate} disabled={!isValid()} variant='contained'>Save</Button>
           </div>
           <Button onClick={cancel} variant='outlined'>Cancel</Button>

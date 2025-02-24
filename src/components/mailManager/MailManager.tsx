@@ -20,6 +20,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
     get('/email/template/default').then((res: MailTemplate) => {
       res.isDefault = true;
       setDefaultTemplate(res);
+      displayTemplate(res);
     }).catch(err => onErrorDialog({message: `Failed to get default template`, err}));
   }, []);
 

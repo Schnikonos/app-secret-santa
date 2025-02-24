@@ -37,6 +37,10 @@
   }
 }
 
+.mailDownload {
+  margin-left: 32px;
+}
+
 .flexSpaceBetween {
   justify-content: space-between;
 }

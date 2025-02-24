@@ -10,7 +10,7 @@ function ExclusionManagement({selectedPerson, activePeopleList}: {selectedPerson
   const [, forceUpdate] = useReducer(x => x + 1, 0, () => 0);
 
   useEffect(() => {
-    setFilteredActivePeopleList(activePeopleList.filter(p => p.id !== selectedPerson?.id));
+    setFilteredActivePeopleList(!selectedPerson ? [] : activePeopleList.filter(p => p.id !== selectedPerson.id));
   }, [selectedPerson, activePeopleList]);
 
   function handleItemClick(item: Person, e: any) {
@@ -118,14 +118,21 @@ function ExclusionManagement({selectedPerson, activePeopleList}: {selectedPerson
         </div>
       </div>
       <div className={styles.block}>
-        <h3>People To Exclude</h3>
+        <h3 className={styles.title}>People To Exclude</h3>
+        {!selectedPerson ? (
+            <div className={styles.emptyList}>Click on a person on the left to select it and manage its exclusions</div>
+        ) : filteredActivePeopleList.length === 0 ? (
+            <div className={styles.emptyList}>No Person left available for exclusion</div>
+        ) : (
+            <div className={styles.subTitle}>(Drag and Drop a name to exclude it)</div>
+        )}
         <div className={styles.list}>
           {filteredActivePeopleList.map((person) => (
             <div key={person.id}
                  draggable
                  onClick={(e) => handleItemClick(person, e)}
                  onDragStart={() => handleDragStart(person)}
-                 className={`${styles.draggable} 
+                 className={`${styles.draggable} ${styles.item}
                   ${selectedItems.includes(person) ? `${styles.selected}` : ""}
                   ${selectedPerson?.willNotReceiveFrom.includes(person) ? `${styles.willNotReceiveFrom}` : ""}
                   ${selectedPerson?.noRelationTo.includes(person) ? `${styles.noRelationTo}` : ""}

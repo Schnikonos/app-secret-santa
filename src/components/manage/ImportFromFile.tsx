@@ -86,10 +86,10 @@ function ImportFromFile({open, onClose, onSnackbar, onErrorDialog}:
           <div className={styles.description}>
             <div className={styles.label}>Format</div>
             <div className={styles.value}>
-              <span title='Family name of the person'>Name</span>,<span
-              title='Surname of the person'>Surname</span>,<span
-              title='Email to contact the person'>Email</span>,<span
-              title="Groups to which the person belongs (separated by ';')">Groups</span>
+              <span title='[Mandatory] Family name of the person'>Name*</span>,<span
+              title='[Mandatory] Surname of the person'>Surname*</span>,<span
+              title='[Mandatory] Email to contact the person'>Email*</span>,<span
+              title="[Optional] Groups to which the person belongs (separated by ';')">Groups</span>
             </div>
           </div>
           <div
