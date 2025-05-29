@@ -4,6 +4,7 @@ import ShuffleIcon from '@mui/icons-material/Shuffle';
 import SendIcon from '@mui/icons-material/Send';
 import {AppBar, Button, Dialog, DialogTitle, Menu, MenuItem, TextField, Toolbar, Typography} from "@mui/material";
 import {
+    AppInfo,
     ComputeReply,
     ErrorMessage,
     MailReply,
@@ -120,6 +121,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
 
     const [mailsToSend, setMailsToSend] = useState<SantaRunPeople[]>([]);
     const [santaToUpdate, setSantaToUpdate] = useState<Santa>();
+    const [appInfo, setAppInfo] = useState<AppInfo>();
 
     function handleOnLoginError(err: Pick<TokenResponse, "error" | "error_description" | "error_uri">) {
         console.log(err);
@@ -192,6 +194,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
     }, [selectedSanta]);
 
     useEffect(() => {
+        get('/info').then(res => setAppInfo(res));
         setComputed(!!selectedRun && selectedRun.peopleList.every(p => p.idPeopleTo !== undefined && p.idPeopleFrom !== undefined));
         updateRunPersonList(selectedRun?.peopleList || []);
     }, [selectedRun]);
@@ -365,7 +368,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         <AppBar position="static">
             <Toolbar>
                 <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-                    Secret Santa
+                    <span className={styles.secretSantaTitle} title={appInfo?.version}>Secret Santa</span>
                     {selectedSanta ? ` - ${selectedSanta.name} [${selectedSanta.secretSantaDate}]` : ''}
                     {selectedRun ? ` - ${runPersonList.length} people` : ''}
                 </Typography>

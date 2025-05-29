@@ -10,6 +10,10 @@
   margin-left: 16px !important;
 }
 
+.secretSantaTitle {
+  user-select: none;
+}
+
 .subPanel {
   height: calc(100vh - 64px);
 }

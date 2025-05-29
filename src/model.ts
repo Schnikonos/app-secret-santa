@@ -64,6 +64,25 @@ export interface Santa {
   runs: SantaRun[];
 }
 
+export interface AppInfo {
+  version: string;
+}
+
+export interface MailVariables {
+  santaName?: string;
+  santaDate?: string;
+  fromName?: string;
+  fromSurname?: string;
+  toName?: string;
+  toSurname?: string;
+  recipientMailAddress?: string;
+}
+
+export interface MailTest {
+  mailTemplate?: MailTemplate;
+  mailVariables?: MailVariables;
+}
+
 export interface ComputeReply {
   santaRun: SantaRun;
   nbChanged: number;
