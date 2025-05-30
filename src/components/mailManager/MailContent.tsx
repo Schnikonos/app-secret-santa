@@ -48,18 +48,49 @@ function MailContentDisplay({mailTemplate, onEdit}: {mailTemplate: MailTemplate,
   );
 }
 
-function MailContentEdit({mailTemplate, onSave, onCancel, onErrorDialog, onSnackbar} :
+function MailContentEdit({mailTemplate, onSave, onCancel, onErrorDialog, onSnackbar, onSetTempMail} :
                          {mailTemplate: MailTemplate, onSave: (mt: MailTemplate) => void, onCancel: () => void,
                            onErrorDialog: (err: ErrorMessage) => void,
                            onSnackbar: (msg: string, state: SnackbarState) => void,
+                           onSetTempMail: (m: MailTemplate) => void,
                          }) {
 
-  const [mailTitle, setMailTitle] = useState<string>('');
-  const [mailContent, setMailContent] = useState<string>('');
-  const [mailType, setMailType] = useState<MailType>('html');
-  const [mailName, setMailName] = useState<string>('');
-  const [mailFormattedContent, setMailFormattedContent] = useState<string>('');
+  const [mailTitle, setMailTitleStr] = useState<string>('');
+  const [mailContent, setMailContentStr] = useState<string>('');
+  const [mailType, setMailTypeStr] = useState<MailType>('html');
+  const [mailName, setMailNameStr] = useState<string>('');
+  const [mailFormattedContent, setMailFormattedContentStr] = useState<string>('');
   const [isDragging, setDragging] = useState<boolean>(false);
+
+  function updateTempMail() {
+    onSetTempMail(toMailTemplate());
+  }
+
+  function setMailTitle(str: string): void {
+    setMailTitleStr(str);
+    updateTempMail();
+  }
+
+  function setMailContent(str: string): void {
+    setMailContentStr(str);
+    updateTempMail();
+  }
+
+  function setMailType(mailType: MailType): void {
+    setMailTypeStr(mailType);
+    updateTempMail();
+  }
+
+  function setMailName(str: string): void {
+    setMailNameStr(str);
+    updateTempMail();
+  }
+
+  function setMailFormattedContent(str: string): void {
+    setMailFormattedContentStr(str);
+    updateTempMail();
+  }
+
 
   useEffect(() => {
     init(mailTemplate);
@@ -197,16 +228,18 @@ function MailContentEdit({mailTemplate, onSave, onCancel, onErrorDialog, onSnack
   );
 }
 
-function MailContent({mailTemplate, onSave, onErrorDialog, onSnackbar}: {
+function MailContent({mailTemplate, onSave, onErrorDialog, onSnackbar, onSetTempMail}: {
   mailTemplate?: MailTemplate,
   onSave: (mailTemplate: MailTemplate) => void,
   onErrorDialog: (err: ErrorMessage) => void,
   onSnackbar: (msg: string, state: SnackbarState) => void,
+  onSetTempMail: (tempMail: MailTemplate) => void,
 }) {
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     setEditMode(!mailTemplate?.isDefault && mailTemplate?.id === undefined);
+    onSetTempMail(mailTemplate as MailTemplate);
   }, [mailTemplate]);
 
   function saveTemplate(mt: MailTemplate) {
@@ -218,7 +251,7 @@ function MailContent({mailTemplate, onSave, onErrorDialog, onSnackbar}: {
     <>
       {!mailTemplate ? ''
         : editMode ? <MailContentEdit mailTemplate={mailTemplate} onSave={saveTemplate}
-                                      onCancel={() => setEditMode(false)} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}></MailContentEdit>
+                                      onCancel={() => setEditMode(false)} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog} onSetTempMail={onSetTempMail}></MailContentEdit>
           : <MailContentDisplay mailTemplate={mailTemplate} onEdit={() => setEditMode(true)}></MailContentDisplay>}
     </>
   );

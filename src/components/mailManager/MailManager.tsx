@@ -21,6 +21,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
   });
 
   const [templates, setTemplates] = useState<MailTemplate[]>([]);
+  const [tempMail, setTempMail] = useState<MailTemplate>();
   const [currentTemplate, setCurrentTemplate] = useState<MailTemplate>();
   const [defaultTemplate, setDefaultTemplate] = useState<MailTemplate>();
 
@@ -118,7 +119,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
         toSurname: toSurname,
         recipientMailAddress: toEmail,
       },
-      mailTemplate: currentTemplate
+      mailTemplate: tempMail
     };
     post(`/email/mail-test`, query).then(() => onSnackbar('Test mail sent !', 'success')).catch(err => onErrorDialog({message: `Failed to test the mail`, err}));
   }
@@ -185,7 +186,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
           </div>
         </div>
         <div>
-          <MailContent mailTemplate={currentTemplate} onSave={saveTemplate} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog}/>
+          <MailContent mailTemplate={currentTemplate} onSave={saveTemplate} onSnackbar={onSnackbar} onErrorDialog={onErrorDialog} onSetTempMail={setTempMail}/>
         </div>
         <div>
           <div>
