@@ -2,6 +2,7 @@
   height: calc(100vh - 64px);
   display: grid;
   grid-template-columns: 300px auto 300px;
+  overflow-y: auto;
 }
 
 .backButton {
