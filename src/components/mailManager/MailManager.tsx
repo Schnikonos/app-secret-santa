@@ -2,11 +2,12 @@ import styles from './MailManager.module.css'
 import {AppBar, Button, IconButton, TextField, Toolbar, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {ErrorMessage, MailTemplate, MailTest, SnackbarState} from "../../model";
-import {deleteCall, get, post} from "../../Utils";
+import {deleteCall, get, newTab, post} from "../../Utils";
 import MailContent from "./MailContent";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SendIcon from "@mui/icons-material/Send";
 import {TokenResponse, useGoogleLogin} from "@react-oauth/google";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
                      {onBack: () => void, onConfirmModal: (msg: string, cbk: () => void) => void
@@ -155,6 +156,10 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
     }
   }
 
+  function help() {
+    newTab('/help');
+  }
+
   return (
     <div>
       <AppBar position="static">
@@ -163,6 +168,7 @@ function MailManager({onBack, onConfirmModal, onErrorDialog, onSnackbar}:
           <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
             Mail Templates
           </Typography>
+          <IconButton color="inherit" onClick={help} title='Help'><HelpOutlineIcon/></IconButton>
         </Toolbar>
       </AppBar>
       <div className={styles.content}>

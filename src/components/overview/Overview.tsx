@@ -2,7 +2,18 @@ import styles from './Overview.module.css';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import SendIcon from '@mui/icons-material/Send';
-import {AppBar, Button, Dialog, DialogTitle, Menu, MenuItem, TextField, Toolbar, Typography} from "@mui/material";
+import {
+    AppBar,
+    Button,
+    Dialog,
+    DialogTitle,
+    IconButton,
+    Menu,
+    MenuItem,
+    TextField,
+    Toolbar,
+    Typography
+} from "@mui/material";
 import {
     AppInfo,
     ComputeReply,
@@ -18,11 +29,12 @@ import {
 } from "../../model";
 import Link from "./Link";
 import React, {useEffect, useState} from "react";
-import {get, post} from "../../Utils";
+import {get, newTab, post} from "../../Utils";
 import RightPanel from "./RightPanel";
 import AddPerson from "./AddPerson";
 import {TokenResponse, useGoogleLogin} from "@react-oauth/google";
 import GroupFilter from "../common/GroupFilter";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 function NewSantaDialog({open, santaInput, handleClose, onErrorDialog, onSnackbar}:
                         {open: boolean, santaInput?: Santa, handleClose: (id: number | null | undefined) => void,
@@ -364,6 +376,10 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
         sendMail([person]);
     }
 
+    function help() {
+        newTab('/help');
+    }
+
     return <>
         <AppBar position="static">
             <Toolbar>
@@ -375,6 +391,7 @@ function Overview({peopleList, selectedSanta, selectedRun, onSelectSanta, onSele
                 <Button color="inherit" className={styles.toolbarButton} onClick={onManageMail} title='Manage the mail templates that can be used'>Mail</Button>
                 <Button disabled={!selectedSanta} className={styles.toolbarButton} color="inherit" onClick={() => selectedSanta ? onManage(selectedSanta, selectedRun) : null} title='Add/Remove new people and define their blacklists'>People</Button>
                 <Button color="inherit" className={styles.toolbarButton} onClick={newSantaDialog} title='Create a new SecretSanta !'>New</Button>
+                <IconButton color="inherit" onClick={help} title='Help'><HelpOutlineIcon/></IconButton>
             </Toolbar>
         </AppBar>
 

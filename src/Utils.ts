@@ -33,6 +33,10 @@ export async function deleteCall(url: string): Promise<any> {
   return call(fetch(API_BASE_URL + url, {method: "DELETE"}));
 }
 
+export async function newTab(url: string): Promise<any> {
+  window.open(API_BASE_URL + url, '_blank');
+}
+
 export function formatDate(date?: string): string {
   if (!date) {
     return '';

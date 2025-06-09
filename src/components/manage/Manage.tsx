@@ -23,13 +23,14 @@ import {
   SnackbarState
 } from "../../model";
 import React, {useEffect, useState} from "react";
-import {deleteCall, post} from "../../Utils";
+import {deleteCall, newTab, post} from "../../Utils";
 import PeopleItem from "./PeopleItem";
 import ExclusionManagement from "./ExclusionManagement";
 import GroupFilter from "../common/GroupFilter";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from '@mui/icons-material/Clear';
 import ImportFromFile from "./ImportFromFile";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 function PersonDialog({person, open, handleClose, availableGroups, onRefreshGroup, onErrorDialog, onSnackbar}:
                       {person?: Person, open: boolean, handleClose: (person: Person | null | undefined) => void,
@@ -354,6 +355,10 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
     onRefreshAvailableFilters();
   }
 
+  function help() {
+    newTab('/help');
+  }
+
   return (
     <div>
       <AppBar position="static">
@@ -365,6 +370,7 @@ function Manage({peopleList, selectedSanta, selectedRun, onBack, onUpdatedPeople
           <div>
             <Button className={styles.actionButton} color="inherit" onClick={onClickImport}>Import</Button>
             <Button className={styles.actionButton} color="inherit" onClick={onExport}>Export</Button>
+            <IconButton color="inherit" onClick={help} title='Help'><HelpOutlineIcon/></IconButton>
           </div>
         </Toolbar>
       </AppBar>
